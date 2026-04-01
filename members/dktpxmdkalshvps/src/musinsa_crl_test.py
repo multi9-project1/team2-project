@@ -38,16 +38,22 @@ CATEGORIES = {
     }
 }
 
-STYLES = {
-    "캐주얼": 1, "스트릿": 2, "고프코어": 3, "프레피": 5,
-    "스포티": 7, "로맨틱": 8, "걸리시": 9, "미니멀": 11,
-    "시크": 12, "레트로": 13, "에스닉": 14,
+MUSINSA_STYLE_ID_MAP = {
+    "캐주얼": 1,
+    "스트릿": 2,
+    "고프코어": 3,
+    "프레피": 5,
+    "스포티": 7,
+    "로맨틱": 8,
+    "걸리시": 9,
+    "미니멀": 11,
+    "시크": 12,
+    "레트로": 13,
+    "에스닉": 14,
 }
 
-FEMALE_ONLY_STYLES = {"걸리시", "로맨틱"}
-
 # ============================================================
-# 2. 퍼스널컬러 & MAPCTI 매핑 데이터
+# 2. 퍼스널컬러 & MAPSITI 매핑 데이터
 # ============================================================
 PERSONAL_COLOR_MAP = {
     "봄라이트": {"description": "맑고 밝은 봄 라이트 타입 — 고명도의 화사하고 부드러운 컬러가 잘 어울립니다.", "colors": ["WHITE", "IVORY", "LIGHTPINK", "PEACH", "PALEPINK", "LIGHTYELLOW", "LIME"]},
@@ -64,43 +70,127 @@ PERSONAL_COLOR_MAP = {
     "겨울쿨": {"description": "차갑고 세련된 겨울 쿨 타입 — 시리고 푸른 계열의 절제된 컬러가 잘 어울립니다.", "colors": ["WHITE", "NAVY", "SILVER", "DENIM"]},
 }
 
-MAPCTI_STYLE_MAP = {
-    "미니멀/모던": {"label": "도심 속 시크한 꾸안꾸족", "styles": ["미니멀", "시크"], "description": "깔끔한 실루엣과 절제된 디테일을 선호하는 타입으로, 슬랙스·셔츠·자켓처럼 단정하고 세련된 아이템이 잘 어울립니다."},
-    "캐주얼/스트릿": {"label": "힙합 바이브, 자유로운 영혼", "styles": ["캐주얼", "스트릿"], "description": "편안하면서도 개성 있는 무드를 즐기는 타입으로, 맨투맨·후드티·와이드 팬츠 같은 여유로운 핏의 아이템이 잘 어울립니다."},
-    "로맨틱/페미닌": {"label": "인간 벚꽃, 러블리 보스", "styles": ["로맨틱", "걸리시"], "description": "사랑스럽고 부드러운 분위기를 살리는 타입으로, 블라우스·원피스·롱스커트·플로럴 패턴처럼 여성스러운 아이템이 잘 어울립니다."},
-    "스포티/고프코어": {"label": "실용성 갑, 트렌디 액티브", "styles": ["스포티", "고프코어"], "description": "활동성과 실용성을 중시하면서도 트렌디함을 놓치지 않는 타입으로, 나일론 팬츠·바람막이·트랙탑 같은 기능성 아이템이 잘 어울립니다."},
+MAPSITI_STYLE_MAP = {
+    "캐주얼": {
+        "label": "노멀 핏 + 실용적/편안함",
+        "styles": ["캐주얼"],
+        "style_ids": [MUSINSA_STYLE_ID_MAP["캐주얼"]],
+        "description": "편안하고 실용적인 스타일을 선호하는 타입으로, 부담 없이 활용하기 좋은 티셔츠, 셔츠, 데님, 코튼 팬츠처럼 데일리한 아이템이 잘 어울립니다.",
+    },
+    "스트리트": {
+        "label": "루즈 핏 + 독특/트렌디",
+        "styles": ["스트릿"],
+        "style_ids": [MUSINSA_STYLE_ID_MAP["스트릿"]],
+        "description": "개성 있고 트렌디한 무드를 즐기는 타입으로, 오버핏 상의, 후드, 와이드 팬츠, 볼캡처럼 존재감 있고 감각적인 아이템이 잘 어울립니다.",
+    },
+    "오피스/소피스티케이티드": {
+        "label": "노멀/타이트 핏 + 도시적/세련됨",
+        "styles": ["프레피", "미니멀", "시크"],
+        "style_ids": [
+            MUSINSA_STYLE_ID_MAP["프레피"],
+            MUSINSA_STYLE_ID_MAP["미니멀"],
+            MUSINSA_STYLE_ID_MAP["시크"],
+        ],
+        "description": "도시적이고 세련된 분위기를 선호하는 타입으로, 셔츠, 슬랙스, 블레이저, 니트처럼 단정하고 정돈된 아이템이 잘 어울립니다.",
+    },
+    "페미닌": {
+        "label": "타이트/노멀 핏 + 여성적/부드러움",
+        "styles": ["로맨틱", "걸리시"],
+        "style_ids": [
+            MUSINSA_STYLE_ID_MAP["로맨틱"],
+            MUSINSA_STYLE_ID_MAP["걸리시"],
+        ],
+        "description": "부드럽고 섬세한 분위기를 살리는 타입으로, 블라우스, 가디건, 스커트, 원피스처럼 유연한 실루엣과 따뜻한 무드의 아이템이 잘 어울립니다.",
+    },
+    "매니시": {
+        "label": "노멀/루즈 핏 + 남성적/도시적",
+        "styles": ["시크", "미니멀", "프레피"],
+        "style_ids": [
+            MUSINSA_STYLE_ID_MAP["시크"],
+            MUSINSA_STYLE_ID_MAP["미니멀"],
+            MUSINSA_STYLE_ID_MAP["프레피"],
+        ],
+        "description": "중성적이고 구조적인 스타일을 선호하는 타입으로, 셔츠, 자켓, 와이드 슬랙스, 로퍼처럼 깔끔하고 힘 있는 인상의 아이템이 잘 어울립니다.",
+    },
+    "스포티": {
+        "label": "루즈/노멀 핏 + 활동적/편안함",
+        "styles": ["스포티", "고프코어"],
+        "style_ids": [
+            MUSINSA_STYLE_ID_MAP["스포티"],
+            MUSINSA_STYLE_ID_MAP["고프코어"],
+        ],
+        "description": "활동성과 편안함을 중요하게 생각하는 타입으로, 트랙팬츠, 바람막이, 스웻셔츠, 기능성 소재 아이템처럼 가볍고 실용적인 옷이 잘 어울립니다.",
+    },
+    "모던/미니멀": {
+        "label": "노멀 핏 + 깔끔함/무난함",
+        "styles": ["미니멀", "시크"],
+        "style_ids": [
+            MUSINSA_STYLE_ID_MAP["미니멀"],
+            MUSINSA_STYLE_ID_MAP["시크"],
+        ],
+        "description": "군더더기 없이 깔끔한 스타일을 선호하는 타입으로, 무채색 상하의, 미니멀한 셔츠, 슬랙스, 심플한 아우터처럼 정제된 아이템이 잘 어울립니다.",
+    },
+    "로맨틱": {
+        "label": "노멀 핏 + 부드러움/발랄함",
+        "styles": ["로맨틱", "걸리시"],
+        "style_ids": [
+            MUSINSA_STYLE_ID_MAP["로맨틱"],
+            MUSINSA_STYLE_ID_MAP["걸리시"],
+        ],
+        "description": "부드럽고 사랑스러운 무드를 선호하는 타입으로, 밝은 컬러, 플로럴 패턴, 가벼운 소재, 디테일이 살아 있는 아이템이 잘 어울립니다.",
+    },
+    "힙스터/펑크": {
+        "label": "루즈/타이트 핏 + 개방적/화려함",
+        "styles": ["스트릿", "레트로", "에스닉"],
+        "style_ids": [
+            MUSINSA_STYLE_ID_MAP["스트릿"],
+            MUSINSA_STYLE_ID_MAP["레트로"],
+            MUSINSA_STYLE_ID_MAP["에스닉"],
+        ],
+        "description": "독특하고 실험적인 스타일을 즐기는 타입으로, 강한 디테일, 패턴, 레이어드, 빈티지 포인트가 살아 있는 아이템이 잘 어울립니다.",
+    },
+    "레트로/빈티지": {
+        "label": "핏의 다양성 + 독특함/명도-채도의 특성",
+        "styles": ["레트로", "에스닉"],
+        "style_ids": [
+            MUSINSA_STYLE_ID_MAP["레트로"],
+            MUSINSA_STYLE_ID_MAP["에스닉"],
+        ],
+        "description": "시대감 있는 무드와 개성 있는 색감, 패턴을 선호하는 타입으로, 빈티지 데님, 패턴 셔츠, 클래식 자켓, 에스닉한 디테일의 아이템이 잘 어울립니다.",
+    },
+}
+
+LEGACY_MAPCTI_ALIAS = {
+    "미니멀/모던": "모던/미니멀",
+    "캐주얼/스트릿": "캐주얼",
+    "로맨틱/페미닌": "로맨틱",
+    "스포티/고프코어": "스포티",
 }
 
 # ============================================================
 # 3. 데이터 조립 및 크롤링 핵심 함수
 # ============================================================
-def build_profile(mapcti: str, personal_color: str, gender: str) -> dict:
-    mapcti = mapcti.strip()
-    mapcti_info = MAPCTI_STYLE_MAP.get(mapcti)
+def build_profile(mapsiti: str, personal_color: str, gender: str) -> dict:
+    normalized_mapsiti = LEGACY_MAPCTI_ALIAS.get(mapsiti.strip(), mapsiti.strip())
+    mapsiti_info = MAPSITI_STYLE_MAP.get(normalized_mapsiti)
     color_info = PERSONAL_COLOR_MAP.get(personal_color)
 
-    if not mapcti_info or not color_info:
-        raise ValueError("잘못된 MAPCTI 또는 퍼스널컬러 입력입니다.")
-
-    styles = list(mapcti_info["styles"])
-
-    if gender == "M":
-        styles = [s for s in styles if s not in FEMALE_ONLY_STYLES]
-        if not styles:
-            styles = ["캐주얼", "미니멀"] 
-
-    style_codes = [STYLES[s] for s in styles if s in STYLES]
+    if not mapsiti_info or not color_info:
+        raise ValueError("잘못된 MAPSITI 또는 퍼스널컬러 입력입니다.")
 
     return {
-        "mapcti": mapcti, 
-        "label": mapcti_info["label"], 
-        "mapcti_description": mapcti_info["description"],
-        "personal_color": personal_color, 
+        "mapsiti": normalized_mapsiti,
+        "input_style": mapsiti,
+        "label": mapsiti_info["label"],
+        "mapsiti_description": mapsiti_info["description"],
+        "personal_color": personal_color,
         "color_description": color_info["description"],
-        "recommended_styles": styles, 
-        "style_codes": style_codes,
+        "recommended_styles": list(mapsiti_info["styles"]),
+        "style_codes": list(mapsiti_info["style_ids"]),
         "recommended_colors": color_info["colors"],
+        "gender": gender,
     }
+
 
 def build_category_url(category_code: str, gender: str, colors: list[str], styles: list[int]) -> str:
     url = f"https://www.musinsa.com/category/{category_code}/goods?gf={gender}"
@@ -108,82 +198,84 @@ def build_category_url(category_code: str, gender: str, colors: list[str], style
         url += f"&color={urllib.parse.quote(','.join(colors), safe='')}"
     if styles:
         url += f"&style={urllib.parse.quote(','.join(str(s) for s in styles), safe='')}"
-    url += "&sortCode=SALE_ONE_WEEK_COUNT" 
+    url += "&sortCode=SALE_ONE_WEEK_COUNT"
     return url
+
 
 def crawl_musinsa(url: str, category_name: str, top_n: int, chrome_version: int = 146) -> list[dict]:
     print(f"\n  ▶ [{category_name}] 상품 정보를 무신사에서 가져오는 중...")
-    
+
     options = uc.ChromeOptions()
-    options.add_argument('--headless') 
+    options.add_argument('--headless')
     driver = uc.Chrome(options=options, version_main=chrome_version)
-    
+
     scraped = []
-    
+
     try:
         driver.get(url)
-        time.sleep(5) 
+        time.sleep(5)
         driver.execute_script("window.scrollTo(0, 800);")
         time.sleep(3)
 
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         product_links = soup.select('a[data-item-id]')
-        
+
         if not product_links:
             print(f"    ❗ [{category_name}] 검색 조건에 맞는 상품이 없거나 로딩되지 않았습니다.")
             return []
-            
+
         seen_titles = set()
-            
+
         for link in product_links:
             if len(scraped) >= top_n:
                 break
-                
+
             img_element = link.select_one('img')
             if not img_element:
                 continue
-                
+
             try:
                 brand = link.get('data-item-brand', "브랜드 없음")
                 raw_price = link.get('data-price', "0")
                 price = f"{int(raw_price):,}" if raw_price.isdigit() else raw_price
                 title = img_element.get('alt', '').strip()
                 img_url = img_element.get('src', '')
-                
+
                 if img_url.startswith('//'):
                     img_url = 'https:' + img_url
-                    
+
                 if not title or title in seen_titles:
                     continue
-                    
+
                 seen_titles.add(title)
                 scraped.append({
                     "brand": brand, "title": title, "price": price, "img_url": img_url
                 })
-                
+
             except Exception:
                 continue
-                
+
     except Exception as e:
         print(f"    🚨 크롤링 중 에러 발생: {e}")
     finally:
         driver.quit()
-        
+
     print(f"    ✅ [{category_name}] {len(scraped)}개 추출 완료")
     return scraped
+
 
 # ============================================================
 # 4. 메인 실행 컨트롤러
 # ============================================================
-def recommend_outfit(mapcti: str, personal_color: str, gender: str, target_categories: list[str], max_colors: int = 5, top_n: int = 5):
-    profile = build_profile(mapcti, personal_color, gender)
+def recommend_outfit(mapsiti: str, personal_color: str, gender: str, target_categories: list[str], max_colors: int = 5, top_n: int = 5):
+    profile = build_profile(mapsiti, personal_color, gender)
     gender_text = "남성" if gender == "M" else "여성"
-    colors_to_use = profile["recommended_colors"][:max_colors] 
+    colors_to_use = profile["recommended_colors"][:max_colors]
 
     sep = "=" * 70
     print(f"\n{sep}")
-    print(f" 🛍️  {gender_text} | 스타일: {profile['mapcti']} ({profile['label']}) | 퍼스널컬러: {profile['personal_color']}")
-    print(f" 💡 {profile['mapcti_description']}")
+    print(f" 🛍️  {gender_text} | 스타일: {profile['mapsiti']} ({profile['label']}) | 퍼스널컬러: {profile['personal_color']}")
+    print(f" 💡 {profile['mapsiti_description']}")
     print(f" 🎨 {profile['color_description']}")
     print(f" 👗 무신사 필터 적용: [스타일: {', '.join(profile['recommended_styles'])}] / [색상: {', '.join(colors_to_use)}]")
     print(sep)
@@ -203,7 +295,7 @@ def recommend_outfit(mapcti: str, personal_color: str, gender: str, target_categ
 
         url = build_category_url(cat_code, gender, colors_to_use, profile["style_codes"])
         items = crawl_musinsa(url, cat_name, top_n=top_n)
-        
+
         if items:
             all_results[cat_name] = items
 
@@ -223,39 +315,40 @@ def recommend_outfit(mapcti: str, personal_color: str, gender: str, target_categ
             print(f"       💰 {item['price']}원")
             print(f"       🖼️  {item['img_url']}\n")
 
-if __name__ == "__main__":
-    print("🚀 퍼스널컬러 & MAPCTI 매핑 테스트를 시작합니다...\n")
 
-    # [테스트 1] 미니멀/모던 & 여름뮤트 (여성)
+if __name__ == "__main__":
+    print("🚀 퍼스널컬러 & MAPSITI 매핑 테스트를 시작합니다...\n")
+
+    # [테스트 1] 모던/미니멀 & 여름뮤트 (여성)
     recommend_outfit(
-        mapcti="미니멀/모던",
+        mapsiti="모던/미니멀",
         personal_color="여름뮤트",
         gender="F",
         target_categories=["셔츠&블라우스", "슈트 팬츠&슬랙스"],
         top_n=2
     )
 
-    # [테스트 2] 캐주얼/스트릿 & 가을웜 (남성)
+    # [테스트 2] 캐주얼 & 가을웜 (남성)
     recommend_outfit(
-        mapcti="캐주얼/스트릿",
+        mapsiti="캐주얼",
         personal_color="가을웜",
         gender="M",
         target_categories=["맨투맨&스웨트", "데님 팬츠"],
         top_n=2
     )
 
-    # [테스트 3] 로맨틱/페미닌 & 봄라이트 (여성)
+    # [테스트 3] 로맨틱 & 봄라이트 (여성)
     recommend_outfit(
-        mapcti="로맨틱/페미닌",
+        mapsiti="로맨틱",
         personal_color="봄라이트",
         gender="F",
         target_categories=["전체(원피스&스커트)", "니트&스웨터"],
         top_n=2
     )
 
-    # [테스트 4] 스포티/고프코어 & 겨울브라이트 (남성)
+    # [테스트 4] 스포티 & 겨울브라이트 (남성)
     recommend_outfit(
-        mapcti="스포티/고프코어",
+        mapsiti="스포티",
         personal_color="겨울브라이트",
         gender="M",
         target_categories=["트레이닝&조거 팬츠", "전체(상의)"],
