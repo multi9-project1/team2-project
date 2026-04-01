@@ -12,7 +12,7 @@
 
 | 수정 전 (기존 모델) | 수정 후 (UX 최적화 모델) |
 | :---: | :---: |
-| ![수정전](./src/Mapsi-TI demo.png) | ![수정후](./src/Mapsi-TI demo1.png) |
+| ![수정전](./src/demo_before.png) | ![수정후](./src/demo_after.png) |
 | 연령대 및 상황(TPO) 등 다단계 입력 | 성별 및 퍼스널 컬러 중심의 간소화된 UI |
 
 > **주요 개선 사항:**
