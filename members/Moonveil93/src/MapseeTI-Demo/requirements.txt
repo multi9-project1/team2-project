@@ -1,0 +1,9 @@
+streamlit
+langchain
+langchain-openai
+langchain-google-genai
+python-dotenv
+pydantic
+selenium
+undetected-chromedriver
+beautifulsoup4
