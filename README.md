@@ -146,7 +146,11 @@ conda activate <본인-아이디>-env
 
 | 이름 | GitHub ID | 역할 | 디렉토리 |
 |------|-----------|------|----------|
-| (팀장 이름) | @github-id | 팀장 | `members/github-id/` |
+| (유시연) | @sini1325 | 팀장 | `members/github-sini1325/` |
+| (김다예) | @DayeKimmy |  | `members/github-DayeKimmy/` |
+| (김명균) | @Moonveil93 |  | `members/github-Moonveil93/` |
+| (이규은) | @gyuala |  | `members/github-gyuala/` |
+| (조은별) | @dktpxmdkalshvps |  | `members/github-dktpxmdkalshvps/` |
 | | | | |
 
 > 멤버 등록 시 위 표에 본인 정보를 추가해주세요.
