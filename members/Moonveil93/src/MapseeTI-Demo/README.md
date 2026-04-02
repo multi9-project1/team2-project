@@ -13,8 +13,7 @@
 
 ---
 
-## 🔥 Core Problem Solving (Pivot Story)
-### "300GB 데이터셋에서 LLM 기반 초경량 아키텍처로의 과감한 피벗"
+##
 
 본 프로젝트는 Mapsi-ti 프로젝트를 진행함에 있어 우선적으로 시각화 하여 테스트 하는 Demo Project 입니다.
 
