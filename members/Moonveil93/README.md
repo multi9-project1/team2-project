@@ -38,7 +38,7 @@ src/ 디렉토리에 포함된 image (1).png ~ image (4).png 파일에서 터미
     - 모델 학습 없이도 정교한 스타일 페르소나 네이밍과 코디 팁 제공.
 
 📸 실행 결과 미리보기
-src/MapseeTI-Demo/test-screenshot/ 디렉토리에 포함된 .PNG 파일에서 데모버전 실행 결과를 확인할 수 있습니다.
+src/Mapsi-TI-Demo/test-screenshot/ 디렉토리에 포함된 .PNG 파일에서 데모버전 실행 결과를 확인할 수 있습니다.
 
 ## 디렉토리 구조
 
@@ -55,7 +55,7 @@ members/Moonveil93/
     ├── image (2).png                      ← 크롤링 결과 이미지 (2) 
     ├── image (3).png                      ← 크롤링 결과 이미지 (3)
     ├── image (4).png                      ← 크롤링 결과 이미지 (4)
-    └── MapseeTI-Demo/
+    └── Mapsi-TI-Demo/
         ├── app.py              # Streamlit UI 및 세션 상태 관리 메인 로직
         ├── logic.py            # LangChain 기반 LLM 분석 및 데이터 파싱 로직
         ├── requirements.txt    # 프로젝트 의존성 라이브러리
@@ -103,7 +103,7 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 ### 3. 앱 실행
 ```bash
-streamlit run src/MapseeTI-Demo/app.py
+streamlit run src/Mapsi-TI-Demo/app.py
 ```
 
 ## 변경 이력
