@@ -50,7 +50,7 @@
 
 ## 📂 Directory Structure
 ```
-MapseeTI-Demo/
+Mapsi-TI-Demo/
 ├── test-screenshot/
 ├── app.py              # Streamlit UI 및 세션 상태 관리 메인 로직
 ├── logic.py            # LangChain 기반 LLM 분석 및 데이터 파싱 로직
@@ -78,8 +78,8 @@ MapseeTI-Demo/
 ### 1. 환경 설정 및 설치
 ```bash
 # 레포지토리 클론
-git clone https://github.com/your-username/MapseeTI.git
-cd MapseeTI
+git clone https://github.com/your-username/Mapsi-TI.git
+cd Mapsi-TI
 
 # 가상환경 생성 및 활성화
 python -m venv venv
@@ -104,7 +104,7 @@ streamlit run app.py
 
 ## 👤 Contact
 - **Developer**: 김명균 (Myeonggyun Kim)
-- **Project Link**: [https://github.com/your-username/MapseeTI](https://github.com/your-username/MapseeTI)
+- **Project Link**: [https://github.com/your-username/Mapsi-TI](https://github.com/your-username/Mapsi-TI)
 
 ---
 
