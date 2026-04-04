@@ -8,7 +8,7 @@ from typing import Any, Dict, Iterable, List
 
 from fashion_config import MOCK_ITEMS
 
-QUESTION_KEYS = ["Q411", "Q412", "Q413", "Q414"] + [f"Q42{i:02d}" for i in range(1, 17)]
+QUESTION_KEYS = ["Q3", "Q411", "Q412", "Q413", "Q414"] + [f"Q42{i:02d}" for i in range(1, 17)]
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 
 

@@ -31,16 +31,24 @@ curl -X POST http://127.0.0.1:8000/recommendations \
       "gender": "여성",
       "personal_color": "winter_deep",
       "Qstyle_1": "A",
-      "Qstyle_2": "B",
+      "Qstyle_2": "A",
       "Qstyle_3": "B",
       "Qstyle_4": "A",
-      "Qstyle_5": "B",
-      "Qstyle_6": "A"
+      "Qstyle_5": "A",
+      "Qstyle_6": "A",
+      "Qstyle_7": "B",
+      "Qstyle_8": "B",
+      "Qstyle_9": "A"
     }
   }'
 ```
 
 이 응답은 `user_profile`, `deeplink_context`만 빠르게 반환합니다.
+이제 `/recommendations`는 아래 문장만 반환합니다.
+
+```text
+알고리즘 분석 결과, 당신의 취향은 **[{era}년대]**의 **[{style}]**과 {유사도점수}% 일치합니다
+```
 
 ### 2. 데이터셋 유사 이미지 갤러리
 
@@ -52,11 +60,14 @@ curl -X POST http://127.0.0.1:8000/dataset-recommendations/gallery \
       "gender": "여성",
       "personal_color": "winter_deep",
       "Qstyle_1": "A",
-      "Qstyle_2": "B",
+      "Qstyle_2": "A",
       "Qstyle_3": "B",
       "Qstyle_4": "A",
-      "Qstyle_5": "B",
-      "Qstyle_6": "A"
+      "Qstyle_5": "A",
+      "Qstyle_6": "A",
+      "Qstyle_7": "B",
+      "Qstyle_8": "B",
+      "Qstyle_9": "A"
     },
     "top_n": 5,
     "allow_mock_data": false,

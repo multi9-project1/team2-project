@@ -5,11 +5,17 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel, Field
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 
+from fashion_config import DATASET_STYLE_DISPLAY, DATASET_STYLE_TO_GROUP
 from item_feature_builder import build_item_feature_list, ensure_dataset_extracted
-from recommender import filter_items_by_gender, filter_items_with_images, rank_items
+from recommender import (
+    filter_items_by_gender,
+    filter_items_with_images,
+    find_top_style_match,
+    rank_items,
+)
 from survey_parser import build_user_profile
 
 app = FastAPI(title="Fashion Recommendation API", version="0.1.0")
@@ -33,6 +39,9 @@ class SurveyRequest(BaseModel):
     Qstyle_4: Optional[str] = None
     Qstyle_5: Optional[str] = None
     Qstyle_6: Optional[str] = None
+    Qstyle_7: Optional[str] = None
+    Qstyle_8: Optional[str] = None
+    Qstyle_9: Optional[str] = None
 
 
 class RecommendationRequest(BaseModel):
@@ -71,6 +80,24 @@ def build_profile_response(user_profile: Dict[str, Any]) -> Dict[str, Any]:
         "user_profile": user_profile,
         "deeplink_context": build_deeplink_context(user_profile),
     }
+
+
+def build_preference_analysis_text(top_match: Dict[str, Any]) -> str:
+    era = str(top_match.get("era", "unknown"))
+    style = format_dataset_style_group(str(top_match.get("style", "unknown")))
+    similarity_percent = int(top_match.get("similarity_percent", 0))
+    return f"알고리즘 분석 결과, 당신의 취향은 **[{era}년대]**의 **[{style}]**과 {similarity_percent}% 일치합니다"
+
+
+def format_dataset_style_label(style_code: str) -> str:
+    korean_label = DATASET_STYLE_DISPLAY.get(style_code.lower())
+    if not korean_label:
+        return "기타 스타일"
+    return korean_label
+
+
+def format_dataset_style_group(style_code: str) -> str:
+    return DATASET_STYLE_TO_GROUP.get(style_code.lower(), "기타 스타일")
 
 
 def _resolve_data_paths(request: RecommendationRequest) -> tuple[Optional[str], Optional[str], Optional[str]]:
@@ -137,6 +164,7 @@ def _run_dataset_recommendation_flow(
     gender_filtered_items = filter_items_by_gender(items, user_profile["gender"])
     image_ready_items = filter_items_with_images(gender_filtered_items)
     candidate_items = image_ready_items or gender_filtered_items or items
+    top_match = find_top_style_match(user_profile, gender_filtered_items or items)
     recommendations = _attach_image_urls(
         rank_items(user_profile, candidate_items, top_n=request.top_n),
         dataset_dir,
@@ -145,6 +173,12 @@ def _run_dataset_recommendation_flow(
 
     response = build_profile_response(user_profile)
     response["recommendation_results"] = recommendations
+    response["preference_analysis"] = {
+        "era": top_match["era"],
+        "style": top_match["style"],
+        "similarity_percent": top_match["similarity_percent"],
+        "text": build_preference_analysis_text(top_match),
+    }
     response["meta"] = {
         "includes_dataset_recommendations": True,
         "item_count": len(items),
@@ -155,6 +189,7 @@ def _run_dataset_recommendation_flow(
         "resolved_dataset_dir": dataset_dir or extract_dir,
         "sample_files_base_url": "/sample-files" if dataset_dir else None,
         "recommended_usage": "analysis-or-demo",
+        "tpo_scoring_enabled": True,
     }
     return response
 
@@ -176,7 +211,7 @@ def _render_gallery_html(result: Dict[str, Any]) -> str:
               <div class="media">{image_tag}</div>
               <div class="body">
                 <h2>{item.get("item_id", "-")}</h2>
-                <p class="meta">gender: {item.get("gender", "-")} | era: {item.get("era", "-")} | style: {item.get("style", "-")}</p>
+                <p class="meta">gender: {item.get("gender", "-")} | era: {item.get("era", "-")} | style: {format_dataset_style_group(str(item.get("style", "-")))}</p>
                 <p class="score">score: {item.get("score", "-")}</p>
                 <ul>{reason_html}</ul>
               </div>
@@ -278,7 +313,8 @@ def _render_gallery_html(result: Dict[str, Any]) -> str:
               퍼스널 컬러: {user_profile.get("personal_color_display")} |
               대표 스타일: {user_profile.get("primary_style")} |
               컬러 키워드: {color_keywords} |
-              스타일 키워드: {style_keywords}
+              스타일 키워드: {style_keywords} |
+              분석 문장: {result.get("preference_analysis", {}).get("text", "")}
             </p>
           </section>
           <section class="grid">
@@ -394,19 +430,33 @@ def _render_gallery_form_html() -> str:
                   <select name="Qstyle_1"><option value="A" selected>A</option><option value="B">B</option></select>
                 </label>
                 <label>Qstyle_2
-                  <select name="Qstyle_2"><option value="A">A</option><option value="B" selected>B</option></select>
+                  <select name="Qstyle_2"><option value="A" selected>A</option><option value="B">B</option></select>
                 </label>
                 <label>Qstyle_3
                   <select name="Qstyle_3"><option value="A">A</option><option value="B" selected>B</option></select>
                 </label>
                 <label>Qstyle_4
-                  <select name="Qstyle_4"><option value="A" selected>A</option><option value="B">B</option></select>
+                  <select name="Qstyle_4"><option value="A">A</option><option value="B" selected>B</option></select>
                 </label>
                 <label>Qstyle_5
-                  <select name="Qstyle_5"><option value="A">A</option><option value="B" selected>B</option></select>
+                  <select name="Qstyle_5"><option value="A" selected>A</option><option value="B">B</option></select>
                 </label>
                 <label>Qstyle_6
                   <select name="Qstyle_6"><option value="A" selected>A</option><option value="B">B</option></select>
+                </label>
+                <label>Qstyle_7
+                  <select name="Qstyle_7"><option value="A">A</option><option value="B" selected>B</option></select>
+                </label>
+                <label>Qstyle_8
+                  <select name="Qstyle_8"><option value="A">A</option><option value="B" selected>B</option></select>
+                </label>
+                <label>Qstyle_9
+                  <select name="Qstyle_9">
+                    <option value="A" selected>A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                  </select>
                 </label>
               </div>
               <input type="hidden" name="top_n" value="5" />
@@ -422,6 +472,14 @@ def _render_gallery_form_html() -> str:
           const form = document.getElementById("gallery-form");
           form.addEventListener("submit", async (event) => {
             event.preventDefault();
+            const popup = window.open("", "_blank");
+            if (!popup) {
+              alert("브라우저가 새 창 열기를 차단했습니다. 팝업 차단을 해제한 뒤 다시 시도해주세요.");
+              return;
+            }
+            popup.document.open();
+            popup.document.write("<p style='font-family:Arial,sans-serif;padding:24px'>갤러리를 불러오는 중입니다...</p>");
+            popup.document.close();
             const formData = new FormData(form);
             const payload = {
               survey: {
@@ -432,7 +490,10 @@ def _render_gallery_form_html() -> str:
                 Qstyle_3: formData.get("Qstyle_3"),
                 Qstyle_4: formData.get("Qstyle_4"),
                 Qstyle_5: formData.get("Qstyle_5"),
-                Qstyle_6: formData.get("Qstyle_6")
+                Qstyle_6: formData.get("Qstyle_6"),
+                Qstyle_7: formData.get("Qstyle_7"),
+                Qstyle_8: formData.get("Qstyle_8"),
+                Qstyle_9: formData.get("Qstyle_9")
               },
               top_n: Number(formData.get("top_n")),
               allow_mock_data: formData.get("allow_mock_data") === "true",
@@ -447,14 +508,93 @@ def _render_gallery_form_html() -> str:
             });
 
             const html = await response.text();
-            const popup = window.open("", "_blank");
-            if (popup) {
+            if (!response.ok) {
               popup.document.open();
-              popup.document.write(html);
+              popup.document.write("<pre style='font-family:monospace;padding:24px'>" + html.replace(/</g, "&lt;") + "</pre>");
               popup.document.close();
+              return;
             }
+            popup.document.open();
+            popup.document.write(html);
+            popup.document.close();
           });
         </script>
+      </body>
+    </html>
+    """
+
+
+def _render_home_html() -> str:
+    return """
+    <!doctype html>
+    <html lang="ko">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Fashion Recommendation API</title>
+        <style>
+          body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            background:
+              radial-gradient(circle at top left, #fff8ee 0, transparent 30%),
+              linear-gradient(135deg, #efe1cf, #f6efe6);
+            color: #2f241b;
+          }
+          .panel {
+            width: min(760px, calc(100vw - 32px));
+            background: rgba(255,255,255,0.82);
+            border: 1px solid #dbcab7;
+            border-radius: 28px;
+            padding: 32px;
+            box-shadow: 0 18px 50px rgba(86, 57, 30, 0.1);
+          }
+          h1 {
+            margin: 0 0 12px;
+            font-size: 34px;
+          }
+          p {
+            margin: 0 0 24px;
+            line-height: 1.7;
+            color: #6f5c49;
+          }
+          .actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+          }
+          a {
+            display: block;
+            text-decoration: none;
+            text-align: center;
+            padding: 16px 18px;
+            border-radius: 999px;
+            font-weight: 700;
+          }
+          .primary {
+            color: white;
+            background: linear-gradient(90deg, #8f4f2c, #b06a40);
+          }
+          .secondary {
+            color: #5b4734;
+            background: #fff8ef;
+            border: 1px solid #d9c6b1;
+          }
+        </style>
+      </head>
+      <body>
+        <main class="panel">
+          <h1>패션 취향 추천 홈</h1>
+          <p>빠른 텍스트 결과는 API 문서에서 확인하고, 유사 이미지 검증은 갤러리 화면에서 바로 볼 수 있습니다.</p>
+          <div class="actions">
+            <a class="primary" href="/gallery-demo">갤러리 보기</a>
+            <a class="secondary" href="/docs">API 문서</a>
+            <a class="secondary" href="/health">상태 확인</a>
+          </div>
+        </main>
       </body>
     </html>
     """
@@ -495,6 +635,11 @@ def health_check() -> Dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/", response_class=HTMLResponse)
+def home() -> HTMLResponse:
+    return HTMLResponse(content=_render_home_html())
+
+
 @app.post("/profile")
 def get_profile(request: ProfileOnlyRequest) -> Dict[str, Any]:
     try:
@@ -533,7 +678,16 @@ def gallery_demo() -> HTMLResponse:
 
 @app.post("/recommendations")
 def recommend_items(request: RecommendationRequest) -> Dict[str, Any]:
-    return get_profile(ProfileOnlyRequest(survey=request.survey))
+    try:
+        result = _run_dataset_recommendation_flow(request, "http://127.0.0.1:8000/")
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"unexpected error: {exc}") from exc
+
+    return {"text": result["preference_analysis"]["text"]}
 
 
 def _is_mock_dataset(items: List[Dict[str, Any]]) -> bool:

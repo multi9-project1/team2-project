@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import math
 from typing import Any, Dict, List
 
-from fashion_config import FIT_SCORE_MAP, PERSONAL_COLOR_TARGETS, STYLE_DISPLAY, STYLE_FEATURE_MAP
+from fashion_config import FIT_SCORE_MAP, PERSONAL_COLOR_TARGETS, STYLE_CODES, STYLE_DISPLAY, STYLE_FEATURE_MAP, TPO_Q3_MAP
 
 
 def compute_style_score(item: Dict[str, Any], primary_style: str, secondary_styles: List[str]) -> tuple[float, Dict[str, float]]:
@@ -158,3 +159,74 @@ def filter_items_by_gender(items: List[Dict[str, Any]], user_gender: str) -> Lis
 
     filtered = [item for item in items if str(item.get("gender", "")).upper() == normalized_user_gender]
     return filtered or items
+
+
+def build_user_style_vector(user_profile: Dict[str, Any]) -> List[float]:
+    style_scores = user_profile.get("style_scores", {})
+    return [float(style_scores.get(style_code, 0)) for style_code in STYLE_CODES]
+
+
+def build_item_style_vector(item: Dict[str, Any]) -> List[float]:
+    vector: List[float] = []
+    for style_code in STYLE_CODES:
+        feature_codes = STYLE_FEATURE_MAP.get(style_code, [])
+        if not feature_codes:
+            vector.append(0.0)
+            continue
+        vector.append(sum(float(item.get(code, 0) or 0) for code in feature_codes) / len(feature_codes))
+    return vector
+
+
+def build_user_tpo_vector(tpo_answer: str) -> List[float]:
+    preferred_q3_values = TPO_Q3_MAP.get(str(tpo_answer or "").upper(), [])
+    return [1.0 if q3_value in preferred_q3_values else 0.0 for q3_value in range(1, 8)]
+
+
+def build_item_tpo_vector(item: Dict[str, Any]) -> List[float]:
+    item_q3 = int(item.get("Q3", 0) or 0)
+    return [1.0 if q3_value == item_q3 else 0.0 for q3_value in range(1, 8)]
+
+
+def compute_cosine_similarity(vector_a: List[float], vector_b: List[float]) -> float:
+    dot = sum(a * b for a, b in zip(vector_a, vector_b))
+    norm_a = math.sqrt(sum(a * a for a in vector_a))
+    norm_b = math.sqrt(sum(b * b for b in vector_b))
+    if norm_a == 0 or norm_b == 0:
+        return 0.0
+    return dot / (norm_a * norm_b)
+
+
+def find_top_style_match(user_profile: Dict[str, Any], items: List[Dict[str, Any]]) -> Dict[str, Any]:
+    user_style_vector = build_user_style_vector(user_profile)
+    user_tpo_vector = build_user_tpo_vector(user_profile.get("tpo_preference", ""))
+    user_vector = user_style_vector + user_tpo_vector
+    best_match: Dict[str, Any] | None = None
+
+    for item in items:
+        item_style_vector = build_item_style_vector(item)
+        item_tpo_vector = build_item_tpo_vector(item)
+        similarity = compute_cosine_similarity(user_vector, item_style_vector + item_tpo_vector)
+        candidate = {
+            "item_id": item.get("item_id"),
+            "era": item.get("era"),
+            "style": item.get("style"),
+            "gender": item.get("gender"),
+            "image_path": item.get("image_path"),
+            "similarity": similarity,
+            "similarity_percent": round(similarity * 100),
+            "q3": item.get("Q3"),
+            "tpo_match": int(item.get("Q3", 0) or 0) in TPO_Q3_MAP.get(user_profile.get("tpo_preference", ""), []),
+        }
+        if best_match is None or candidate["similarity"] > best_match["similarity"]:
+            best_match = candidate
+
+    return best_match or {
+        "item_id": None,
+        "era": "unknown",
+        "style": "unknown",
+        "gender": None,
+        "image_path": None,
+        "similarity": 0.0,
+        "similarity_percent": 0,
+        "q3": None,
+    }

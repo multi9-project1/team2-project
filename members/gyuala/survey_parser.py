@@ -30,6 +30,7 @@ class UserProfile:
     style_display: Dict[str, str]
     style_search_keywords: List[str]
     color_search_keywords: List[str]
+    tpo_preference: str
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -112,7 +113,7 @@ def resolve_primary_and_secondary_styles(style_scores: Dict[str, int]) -> tuple[
 
 
 def infer_fit_preference(responses: Dict[str, Any]) -> str:
-    answer = normalize_answer(responses.get("Qstyle_2"))
+    answer = normalize_answer(responses.get("Qstyle_3"))
     if answer == "A":
         return "T"
     if answer == "B":
@@ -138,6 +139,7 @@ def build_user_profile(responses: Dict[str, Any]) -> UserProfile:
         style_display={primary_style: STYLE_DISPLAY.get(primary_style, primary_style)},
         style_search_keywords=_build_style_search_keywords(primary_style, secondary_styles),
         color_search_keywords=PERSONAL_COLOR_SEARCH_KEYWORDS.get(personal_color, []),
+        tpo_preference=normalize_answer(responses.get("Qstyle_9")),
     )
 
 

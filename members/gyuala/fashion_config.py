@@ -133,26 +133,94 @@ PERSONAL_COLOR_SEARCH_KEYWORDS: Dict[str, List[str]] = {
     "unknown": [],
 }
 
+DATASET_STYLE_DISPLAY: Dict[str, str] = {
+    "athleisure": "애슬레저룩",
+    "bodyconscious": "바디컨셔스룩",
+    "bold": "볼드룩",
+    "cityglam": "시티글램룩",
+    "classic": "클래식룩",
+    "disco": "디스코룩",
+    "ecology": "에콜로지룩",
+    "feminine": "페미닌룩",
+    "genderless": "젠더리스룩",
+    "grunge": "그런지룩",
+    "hiphop": "힙합룩",
+    "hippie": "히피룩",
+    "ivy": "아이비룩",
+    "kitsch": "키치룩",
+    "lingerie": "란제리룩",
+    "lounge": "라운지룩",
+    "metrosexual": "메트로섹슈얼룩",
+    "military": "밀리터리룩",
+    "minimal": "미니멀룩",
+    "mods": "모즈룩",
+    "normcore": "놈코어룩",
+    "oriental": "오리엔탈룩",
+    "popart": "팝아트룩",
+    "powersuit": "파워수트룩",
+    "punk": "펑크룩",
+    "space": "스페이스룩",
+    "sportivecasual": "스포티브 캐주얼룩",
+}
+
+DATASET_STYLE_TO_GROUP: Dict[str, str] = {
+    "cityglam": "소피스티케이티드",
+    "powersuit": "소피스티케이티드",
+    "classic": "소피스티케이티드",
+    "feminine": "페미닌",
+    "bodyconscious": "페미닌",
+    "lingerie": "로맨틱",
+    "oriental": "로맨틱",
+    "minimal": "모던/미니멀",
+    "normcore": "모던/미니멀",
+    "ivy": "캐주얼",
+    "lounge": "캐주얼",
+    "ecology": "캐주얼",
+    "genderless": "매니시",
+    "metrosexual": "매니시",
+    "military": "매니시",
+    "hiphop": "스트릿",
+    "bold": "스트릿",
+    "athleisure": "스포티",
+    "sportivecasual": "스포티",
+    "punk": "힙스터/펑크",
+    "grunge": "힙스터/펑크",
+    "kitsch": "힙스터/펑크",
+    "mods": "레트로/빈티지",
+    "popart": "레트로/빈티지",
+    "space": "레트로/빈티지",
+    "disco": "레트로/빈티지",
+    "hippie": "레트로/빈티지",
+}
+
 STYLE_QUESTION_RULES: Dict[str, Dict[str, List[str]]] = {
     "Qstyle_1": {
-        "A": ["sophisticated", "modern_minimal", "feminine", "mannish"],
-        "B": ["casual", "romantic", "street", "sporty", "hipster_punk", "retro"],
+        "A": ["sophisticated", "modern_minimal", "mannish"],
+        "B": ["casual", "romantic", "feminine"],
     },
-    "Qstyle_3": {
-        "A": ["feminine", "sophisticated", "hipster_punk", "romantic"],
-        "B": ["casual", "street", "sporty", "mannish", "retro"],
+    "Qstyle_2": {
+        "A": ["modern_minimal", "casual", "sophisticated"],
+        "B": ["street", "hipster_punk", "retro"],
     },
     "Qstyle_4": {
-        "A": ["modern_minimal", "casual", "mannish", "sophisticated"],
-        "B": ["hipster_punk", "retro", "street", "romantic"],
+        "A": ["feminine", "romantic", "retro"],
+        "B": ["sporty", "street", "casual"],
     },
     "Qstyle_5": {
-        "A": ["romantic", "feminine", "sophisticated", "modern_minimal", "retro"],
-        "B": ["sporty", "casual", "street", "hipster_punk", "mannish"],
+        "A": ["mannish", "modern_minimal", "street"],
+        "B": ["romantic", "retro", "feminine"],
     },
     "Qstyle_6": {
-        "A": ["mannish", "modern_minimal", "sophisticated", "street"],
-        "B": ["romantic", "retro", "feminine", "casual"],
+        "A": ["sophisticated", "mannish", "modern_minimal"],
+        "B": ["hipster_punk", "street", "sporty"],
+    },
+    "Qstyle_7": {
+        "A": ["casual", "sporty", "hipster_punk"],
+        "B": ["feminine", "romantic", "sophisticated"],
+    },
+    "Qstyle_8": {
+        "A": ["mannish", "hipster_punk", "street"],
+        "B": ["modern_minimal", "retro", "sporty"],
     },
 }
 
@@ -167,6 +235,13 @@ STYLE_FEATURE_MAP: Dict[str, List[str]] = {
     "street": ["Q4207", "Q4203"],
     "sporty": ["Q4211", "Q4212"],
     "retro": ["Q4207"],
+}
+
+TPO_Q3_MAP: Dict[str, List[int]] = {
+    "A": [1, 5],
+    "B": [2, 4],
+    "C": [3],
+    "D": [6, 7],
 }
 
 FIT_SCORE_MAP = {
