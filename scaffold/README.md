@@ -1,4 +1,4 @@
-# Fashion Recommendation Service
+# 맵시TI : Fashion Recommendation Service
 
 사용자 설문 응답을 기반으로 스타일/핏/TPO 결과를 분석하고, 이에 맞는 상품을 추천한 뒤 무신사/지그재그 딥링크를 생성해 제공하는 추천 서비스입니다.
 
