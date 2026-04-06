@@ -8,15 +8,17 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from fashion_config import DATASET_STYLE_DISPLAY, DATASET_STYLE_TO_GROUP
+from fashion_config import DATASET_STYLE_DISPLAY, DATASET_STYLE_TO_GROUP, STYLE_DISPLAY, TPO_DEEPLINK_KEYWORD
 from item_feature_builder import build_item_feature_list, ensure_dataset_extracted
 from recommender import (
+    collect_top_style_matches,
     filter_items_by_gender,
     filter_items_with_images,
     find_top_style_match,
+    infer_style_profile_from_matches,
     rank_items,
 )
-from survey_parser import build_user_profile
+from survey_parser import _build_style_search_keywords, build_user_profile
 
 app = FastAPI(title="Fashion Recommendation API", version="0.1.0")
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -70,6 +72,7 @@ def build_deeplink_context(user_profile: Dict[str, Any]) -> Dict[str, Any]:
         "secondary_style_codes": user_profile["secondary_styles"],
         "style_search_keywords": user_profile["style_search_keywords"],
         "fit_preference": user_profile["fit_preference"],
+        "tpo_keyword": TPO_DEEPLINK_KEYWORD.get(user_profile.get("tpo_preference", ""), ""),
         "musinsa_search_keywords": user_profile["color_search_keywords"] + user_profile["style_search_keywords"],
         "zigzag_search_keywords": user_profile["color_search_keywords"] + user_profile["style_search_keywords"],
     }
@@ -164,6 +167,16 @@ def _run_dataset_recommendation_flow(
     gender_filtered_items = filter_items_by_gender(items, user_profile["gender"])
     image_ready_items = filter_items_with_images(gender_filtered_items)
     candidate_items = image_ready_items or gender_filtered_items or items
+    top_matches = collect_top_style_matches(user_profile, gender_filtered_items or items, top_k=20)
+    inferred_style_profile = infer_style_profile_from_matches(top_matches)
+    if inferred_style_profile.get("primary_style_code"):
+        primary_style_code = inferred_style_profile["primary_style_code"]
+        secondary_style_codes = inferred_style_profile["secondary_style_codes"]
+        user_profile["primary_style"] = primary_style_code
+        user_profile["secondary_styles"] = secondary_style_codes
+        user_profile["style_display"] = {primary_style_code: STYLE_DISPLAY.get(primary_style_code, primary_style_code)}
+        user_profile["style_search_keywords"] = _build_style_search_keywords(primary_style_code, secondary_style_codes)
+
     top_match = find_top_style_match(user_profile, gender_filtered_items or items)
     recommendations = _attach_image_urls(
         rank_items(user_profile, candidate_items, top_n=request.top_n),
@@ -175,9 +188,9 @@ def _run_dataset_recommendation_flow(
     response["recommendation_results"] = recommendations
     response["preference_analysis"] = {
         "era": top_match["era"],
-        "style": top_match["style"],
+        "style": inferred_style_profile["primary_group"],
         "similarity_percent": top_match["similarity_percent"],
-        "text": build_preference_analysis_text(top_match),
+        "text": f"알고리즘 분석 결과, 당신의 취향은 **[{top_match['era']}년대]**의 **[{inferred_style_profile['primary_group']}]**과 {top_match['similarity_percent']}% 일치합니다",
     }
     response["meta"] = {
         "includes_dataset_recommendations": True,

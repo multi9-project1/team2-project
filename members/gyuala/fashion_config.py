@@ -193,6 +193,27 @@ DATASET_STYLE_TO_GROUP: Dict[str, str] = {
     "hippie": "레트로/빈티지",
 }
 
+GROUP_DISPLAY_TO_STYLE_CODE: Dict[str, str] = {
+    "소피스티케이티드": "sophisticated",
+    "페미닌": "feminine",
+    "로맨틱": "romantic",
+    "모던/미니멀": "modern_minimal",
+    "캐주얼": "casual",
+    "매니시": "mannish",
+    "스트릿": "street",
+    "스포티": "sporty",
+    "힙스터/펑크": "hipster_punk",
+    "레트로/빈티지": "retro",
+}
+
+STYLE_RANKING_WEIGHTS: Dict[str, Dict[str, float]] = {
+    "default": {"style": 0.75, "fit": 0.20, "color": 0.05, "group_bonus": 0.0},
+    "retro": {"style": 0.82, "fit": 0.08, "color": 0.05, "group_bonus": 0.05},
+    "hipster_punk": {"style": 0.82, "fit": 0.08, "color": 0.05, "group_bonus": 0.05},
+    "street": {"style": 0.80, "fit": 0.10, "color": 0.05, "group_bonus": 0.05},
+    "sporty": {"style": 0.70, "fit": 0.20, "color": 0.05, "group_bonus": 0.05},
+}
+
 STYLE_QUESTION_RULES: Dict[str, Dict[str, List[str]]] = {
     "Qstyle_1": {
         "A": ["sophisticated", "modern_minimal", "mannish"],
@@ -242,6 +263,13 @@ TPO_Q3_MAP: Dict[str, List[int]] = {
     "B": [2, 4],
     "C": [3],
     "D": [6, 7],
+}
+
+TPO_DEEPLINK_KEYWORD: Dict[str, str] = {
+    "A": "출근룩",
+    "B": "데이트룩",
+    "C": "하객룩",
+    "D": "레저룩",
 }
 
 FIT_SCORE_MAP = {

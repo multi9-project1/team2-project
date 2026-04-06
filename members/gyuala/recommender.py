@@ -3,7 +3,17 @@ from __future__ import annotations
 import math
 from typing import Any, Dict, List
 
-from fashion_config import FIT_SCORE_MAP, PERSONAL_COLOR_TARGETS, STYLE_CODES, STYLE_DISPLAY, STYLE_FEATURE_MAP, TPO_Q3_MAP
+from fashion_config import (
+    DATASET_STYLE_TO_GROUP,
+    FIT_SCORE_MAP,
+    GROUP_DISPLAY_TO_STYLE_CODE,
+    PERSONAL_COLOR_TARGETS,
+    STYLE_CODES,
+    STYLE_DISPLAY,
+    STYLE_FEATURE_MAP,
+    STYLE_RANKING_WEIGHTS,
+    TPO_Q3_MAP,
+)
 
 
 def compute_style_score(item: Dict[str, Any], primary_style: str, secondary_styles: List[str]) -> tuple[float, Dict[str, float]]:
@@ -54,6 +64,32 @@ def compute_final_score(style_score: float, fit_score: float, color_score: float
     return (0.55 * style_score) + (0.15 * fit_score) + (0.30 * color_score)
 
 
+def compute_weighted_final_score(
+    *,
+    style_score: float,
+    fit_score: float,
+    color_score: float,
+    primary_style: str,
+    item_style: str,
+) -> tuple[float, Dict[str, float]]:
+    weights = STYLE_RANKING_WEIGHTS.get(primary_style, STYLE_RANKING_WEIGHTS["default"])
+    item_group = DATASET_STYLE_TO_GROUP.get(str(item_style).lower(), "기타 스타일")
+    item_group_code = GROUP_DISPLAY_TO_STYLE_CODE.get(item_group)
+    group_bonus = weights.get("group_bonus", 0.0) if item_group_code == primary_style else 0.0
+    final_score = (
+        (weights["style"] * style_score)
+        + (weights["fit"] * fit_score)
+        + (weights["color"] * color_score)
+        + group_bonus
+    )
+    return final_score, {
+        "style_weight": round(weights["style"], 4),
+        "fit_weight": round(weights["fit"], 4),
+        "color_weight": round(weights["color"], 4),
+        "group_bonus": round(group_bonus, 4),
+    }
+
+
 def build_reasons(
     *,
     style_score: float,
@@ -95,7 +131,13 @@ def rank_items(user_profile: Dict[str, Any], items: List[Dict[str, Any]], top_n:
         )
         fit_score = compute_fit_score(item, user_profile["fit_preference"])
         color_score, color_breakdown = compute_color_score(item, user_profile["personal_color"])
-        final_score = compute_final_score(style_score, fit_score, color_score)
+        final_score, final_weight_breakdown = compute_weighted_final_score(
+            style_score=style_score,
+            fit_score=fit_score,
+            color_score=color_score,
+            primary_style=user_profile["primary_style"],
+            item_style=str(item.get("style", "")),
+        )
 
         recommendations.append(
             {
@@ -111,6 +153,7 @@ def rank_items(user_profile: Dict[str, Any], items: List[Dict[str, Any]], top_n:
                     "color": round(color_score, 4),
                     **style_breakdown,
                     **color_breakdown,
+                    **final_weight_breakdown,
                 },
                 "matched_features": {
                     "q411": item.get("Q411"),
@@ -229,4 +272,48 @@ def find_top_style_match(user_profile: Dict[str, Any], items: List[Dict[str, Any
         "similarity": 0.0,
         "similarity_percent": 0,
         "q3": None,
+    }
+
+
+def collect_top_style_matches(user_profile: Dict[str, Any], items: List[Dict[str, Any]], top_k: int = 20) -> List[Dict[str, Any]]:
+    user_style_vector = build_user_style_vector(user_profile)
+    user_tpo_vector = build_user_tpo_vector(user_profile.get("tpo_preference", ""))
+    user_vector = user_style_vector + user_tpo_vector
+    matches: List[Dict[str, Any]] = []
+
+    for item in items:
+        item_style_vector = build_item_style_vector(item)
+        item_tpo_vector = build_item_tpo_vector(item)
+        similarity = compute_cosine_similarity(user_vector, item_style_vector + item_tpo_vector)
+        matches.append(
+            {
+                "item_id": item.get("item_id"),
+                "era": item.get("era"),
+                "style": item.get("style"),
+                "style_group": DATASET_STYLE_TO_GROUP.get(str(item.get("style", "")).lower(), "기타 스타일"),
+                "similarity": similarity,
+                "similarity_percent": round(similarity * 100),
+            }
+        )
+
+    matches.sort(key=lambda item: item["similarity"], reverse=True)
+    return matches[:top_k]
+
+
+def infer_style_profile_from_matches(matches: List[Dict[str, Any]]) -> Dict[str, Any]:
+    group_scores: Dict[str, float] = {}
+    for match in matches:
+        style_group = match.get("style_group", "기타 스타일")
+        group_scores[style_group] = group_scores.get(style_group, 0.0) + float(match.get("similarity", 0.0))
+
+    ranked_groups = sorted(group_scores.items(), key=lambda item: item[1], reverse=True)
+    primary_group = ranked_groups[0][0] if ranked_groups else "기타 스타일"
+    secondary_groups = [group for group, _ in ranked_groups[1:3]]
+
+    return {
+        "primary_group": primary_group,
+        "primary_style_code": GROUP_DISPLAY_TO_STYLE_CODE.get(primary_group),
+        "secondary_groups": secondary_groups,
+        "secondary_style_codes": [GROUP_DISPLAY_TO_STYLE_CODE[group] for group in secondary_groups if group in GROUP_DISPLAY_TO_STYLE_CODE],
+        "group_scores": {group: round(score, 4) for group, score in ranked_groups},
     }
