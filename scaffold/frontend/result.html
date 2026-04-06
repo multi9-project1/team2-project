@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>맵시TI | 결과</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <div class="app">
+    <section id="loading-section">
+      <div class="loading-box">
+        <div class="loading-title">맵시 분석 중... ✨</div>
+        <div class="spinner" id="spinner"></div>
+        <div id="loading-msg" style="font-size:16px; color:#7C6F9A;">퍼스널컬러 데이터 연산 중...</div>
+        <div style="margin-top:20px; font-size:14px; color:#7C6F9A;">잠깐만 기다려줘!</div>
+      </div>
+    </section>
+
+    <section id="result-section" style="display:none;">
+      <div class="center mb-12">
+        <span class="result-badge" id="result-badge">나의 맵시TI</span>
+      </div>
+
+      <div class="result-char" id="result-char">
+        <div class="char-img" id="char-img">🎭</div>
+        <div class="result-title" id="result-title"></div>
+        <div class="result-sub" id="result-sub"></div>
+      </div>
+
+      <div class="pcard" id="result-desc-card">
+        <div id="result-desc"></div>
+        <div id="result-items"></div>
+      </div>
+
+      <div class="grid-2 mb-16">
+        <div class="pcard" id="style-tip-card" style="margin-bottom:0;">
+          <div class="info-mini">💡 스타일 팁</div>
+          <div id="style-tip-text" class="helper-text" style="font-size:14px; line-height:1.6; color:#1E1B3A;"></div>
+        </div>
+        <div class="pcard" id="point-color-card" style="margin-bottom:0;">
+          <div class="info-mini">🎨 포인트 컬러</div>
+          <div id="point-color-tags"></div>
+        </div>
+      </div>
+
+      <div class="pcard">
+        <div style="font-size:20px; font-weight:700; margin-bottom:14px;">🛒 쇼핑 큐레이션</div>
+        <div class="category-tabs" id="cat-tabs"></div>
+
+        <div class="grid-2 mb-12">
+          <div>
+            <div class="select-label">핏 선택</div>
+            <select id="fit-select"></select>
+          </div>
+          <div>
+            <div class="select-label">컬러 선택</div>
+            <select id="color-select"></select>
+          </div>
+        </div>
+
+        <button class="btn btn-success" id="preview-btn">⚡ 맞춤 상품 보기</button>
+        <div id="product-results" class="mt-16"></div>
+        <div id="shop-links" class="shop-links"></div>
+      </div>
+
+      <div class="grid-2 mt-16">
+        <button class="btn btn-primary" id="share-btn">📸 결과 공유</button>
+        <button class="btn btn-dark" id="reset-btn">🔄 다시하기</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="./js/utils.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/result.js"></script>
+</body>
+</html>

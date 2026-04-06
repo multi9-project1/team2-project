@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>맵시TI | 설문</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <div class="app">
+    <div class="progress-wrap">
+      <div class="progress-info">
+        <span id="q-prog-txt">Q1 / 9</span>
+        <span id="q-prog-pct">11%</span>
+      </div>
+      <div class="pbar-bg"><div class="pbar-fill" id="pbar" style="width:11%"></div></div>
+    </div>
+
+    <section class="pcard">
+      <div id="q-num" class="meta-text" style="margin-bottom:4px;">Q1</div>
+      <div id="q-text" style="font-size:20px; margin-bottom:18px; line-height:1.5;"></div>
+      <div id="q-options" class="stack"></div>
+
+      <div class="row mt-16">
+        <button class="btn btn-soft" id="prev-btn">← 이전</button>
+        <button class="btn btn-secondary" id="survey-next">다음 →</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="./js/utils.js"></script>
+  <script src="./js/survey.js"></script>
+</body>
+</html>

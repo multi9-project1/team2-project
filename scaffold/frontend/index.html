@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>맵시TI</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <div class="app">
+    <section id="intro-screen">
+      <div class="page-title">맵시TI ✨</div>
+      <div class="page-subtitle">나만의 패션 페르소나를 찾아봐!</div>
+
+      <div class="pcard highlight-card">
+        <div class="hero-emoji">👗</div>
+        <div class="hero-copy">성별 &amp; 퍼스널컬러 분석 +<br />스타일 설문 9문항으로<br />나만의 패션 DNA 발견!</div>
+      </div>
+
+      <div class="pcard info-card">
+        🎯 10가지 스타일 페르소나 분석<br />
+        🛍️ 무신사 &amp; 지그재그 맞춤 상품 추천<br />
+        🎨 퍼스널컬러 맞춤 컬러 가이드<br />
+        📸 결과 카드 SNS 공유 가능
+      </div>
+
+      <button class="btn btn-primary" id="start-btn">시작하기 💫</button>
+    </section>
+
+    <section id="setup-screen" style="display:none;">
+      <div class="page-title" style="font-size:28px; padding-top:14px;">맵시TI ✨</div>
+
+      <div class="pcard" id="gender-card-wrap">
+        <div class="section-title">나는 어떤 스타일러?</div>
+        <div class="section-subtitle">성별을 선택해줘!<br />결과 캐릭터가 달라져 🎭</div>
+
+        <div class="gender-grid mb-20" id="gender-grid">
+          <button type="button" class="gender-card" data-gender="W">
+            <span class="card-emoji">👩</span>
+            <div class="card-title">여성</div>
+            <div class="card-desc">무신사 + 지그재그</div>
+          </button>
+          <button type="button" class="gender-card" data-gender="M">
+            <span class="card-emoji">👨</span>
+            <div class="card-title">남성</div>
+            <div class="card-desc">무신사</div>
+          </button>
+        </div>
+
+        <button class="btn btn-secondary" id="gender-next-btn">다음으로 →</button>
+      </div>
+
+      <div class="pcard" id="color-entry-card" style="display:none;">
+        <div class="section-title">퍼스널컬러 알아? 🎨</div>
+        <div class="section-subtitle">알고 있으면 바로 선택,<br />모르면 간이 진단으로 찾아줄게!</div>
+
+        <button class="btn btn-primary" id="goto-color-select-btn">알아! 바로 선택할게 💅</button>
+        <button class="btn btn-accent" id="start-diag-btn">모르겠어… 진단해줘 🔍</button>
+      </div>
+
+      <div class="pcard" id="color-select-card" style="display:none;">
+        <div class="section-title">퍼스널컬러 선택 🎨</div>
+        <div id="color-grid" class="color-grid"></div>
+        <button class="btn btn-secondary mt-16" id="color-next-btn">선택 완료 →</button>
+        <button class="btn btn-soft" id="color-back-btn">← 뒤로</button>
+      </div>
+
+      <div class="pcard" id="diag-step1-card" style="display:none;">
+        <div class="meta-text mb-12">1단계 / 2단계</div>
+        <div style="font-size:21px; margin-bottom:6px;">내 피부 바탕색은? 🌈</div>
+        <div class="helper-text mb-20">두 가지 질문으로 웜/쿨톤을 찾아볼게!</div>
+        <div id="diag1-content"></div>
+        <div class="row mt-16">
+          <button class="btn btn-soft" id="diag1-back-btn">← 뒤로</button>
+        </div>
+      </div>
+
+      <div class="pcard" id="diag-step2-card" style="display:none;">
+        <div class="meta-text mb-12">2단계 / 2단계</div>
+        <div style="font-size:21px; margin-bottom:6px;">나에게 어울리는 색깔은? 🎨</div>
+        <div class="helper-text mb-20">1단계 결과를 바탕으로 골라봐!</div>
+        <div id="diag2-content"></div>
+        <button class="btn btn-soft mt-16" id="diag2-back-btn">← 이전 단계로</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="./js/utils.js"></script>
+  <script>
+    let state = getAppState();
+    let diagStepIndex = 0;
+
+    const introScreen = qs('#intro-screen');
+    const setupScreen = qs('#setup-screen');
+    const genderCards = qsa('[data-gender]');
+    const colorGrid = qs('#color-grid');
+
+    function showIntro() {
+      introScreen.style.display = 'block';
+      setupScreen.style.display = 'none';
+    }
+
+    function showSetup() {
+      introScreen.style.display = 'none';
+      setupScreen.style.display = 'block';
+      showCard('gender-card-wrap');
+      showCard('color-entry-card', false);
+      showCard('color-select-card', false);
+      showCard('diag-step1-card', false);
+      showCard('diag-step2-card', false);
+      syncGenderSelection();
+    }
+
+    function showCard(id, visible = true) {
+      qs(`#${id}`).style.display = visible ? 'block' : 'none';
+    }
+
+    function syncGenderSelection() {
+      genderCards.forEach((card) => {
+        card.classList.toggle('is-selected', card.dataset.gender === state.gender);
+      });
+    }
+
+    function buildColorGrid() {
+      colorGrid.innerHTML = COLORS.map((color) => `
+        <button type="button" class="select-card ${state.personalColor === color.key ? 'is-selected' : ''}" data-color="${color.key}" style="background:${color.bg};">
+          <div class="select-dot" style="background:${color.dot};"></div>
+          <div>${color.key}</div>
+          <small>${color.desc}</small>
+        </button>
+      `).join('');
+
+      qsa('[data-color]').forEach((button) => {
+        button.addEventListener('click', () => {
+          state = patchAppState({ personalColor: button.dataset.color });
+          buildColorGrid();
+        });
+      });
+    }
+
+    function renderDiag1() {
+      const current = DIAG_Q1[diagStepIndex];
+      qs('#diag1-content').innerHTML = `
+        <div class="meta-text mb-12">질문 ${diagStepIndex + 1} / ${DIAG_Q1.length}</div>
+        <div style="font-size:18px; margin-bottom:16px;">${current.text}</div>
+        <div class="choice-grid">
+          ${current.opts.map((option) => `
+            <button type="button" class="choice-card" data-diag1="${option.key}">
+              <div style="font-size:15px; font-weight:700;">${option.label}</div>
+              <div class="card-desc" style="margin-top:6px;">${option.desc}</div>
+            </button>
+          `).join('')}
+        </div>
+      `;
+
+      qsa('[data-diag1]').forEach((button) => {
+        button.addEventListener('click', () => selectDiag1(button.dataset.diag1));
+      });
+    }
+
+    function renderDiag2() {
+      const hasWarm = state.diagWarmCool.includes('W');
+      const hasCool = state.diagWarmCool.includes('C');
+      let options = [];
+
+      if (hasWarm && !hasCool) options = DIAG_WARM_OPTS;
+      else if (!hasWarm && hasCool) options = DIAG_COOL_OPTS;
+      else options = [...DIAG_WARM_OPTS, ...DIAG_COOL_OPTS];
+
+      qs('#diag2-content').innerHTML = `
+        <div class="helper-text mb-16">
+          1단계 결과: ${hasWarm && hasCool ? '웜/쿨 혼합형 🎨' : hasWarm ? '웜톤 🌅' : '쿨톤 💙'}<br />
+          아래 중 지금 내 피부에 가장 잘 어울리는 느낌을 골라봐!
+        </div>
+        <div class="stack">
+          ${options.map((option) => `
+            <button type="button" class="diag-card" data-diag2="${option.key}">
+              <div class="diag-dot" style="background:${COLORS.find((color) => color.key === option.key)?.dot || '#ccc'};"></div>
+              <div style="text-align:left;">
+                <div style="font-weight:700;">${option.key}</div>
+                <div class="card-desc" style="margin-top:2px;">${option.desc}</div>
+              </div>
+            </button>
+          `).join('')}
+        </div>
+      `;
+
+      qsa('[data-diag2]').forEach((button) => {
+        button.addEventListener('click', () => {
+          state = patchAppState({ personalColor: button.dataset.diag2 });
+          alert(`진단 완료! 당신은 ${button.dataset.diag2} 타입이에요 🎨`);
+          navigateTo('./survey.html');
+        });
+      });
+    }
+
+    function selectDiag1(key) {
+      const nextAnswers = [...state.diagWarmCool, key];
+      state = patchAppState({ diagWarmCool: nextAnswers });
+
+      if (diagStepIndex < DIAG_Q1.length - 1) {
+        diagStepIndex += 1;
+        renderDiag1();
+        return;
+      }
+
+      showCard('diag-step1-card', false);
+      showCard('diag-step2-card', true);
+      renderDiag2();
+    }
+
+    genderCards.forEach((card) => {
+      card.addEventListener('click', () => {
+        state = patchAppState({ gender: card.dataset.gender });
+        syncGenderSelection();
+      });
+    });
+
+    qs('#start-btn').addEventListener('click', showSetup);
+
+    qs('#gender-next-btn').addEventListener('click', () => {
+      if (!state.gender) {
+        alert('성별을 선택해주세요!');
+        return;
+      }
+      showCard('gender-card-wrap', false);
+      showCard('color-entry-card', true);
+    });
+
+    qs('#goto-color-select-btn').addEventListener('click', () => {
+      showCard('color-entry-card', false);
+      showCard('color-select-card', true);
+      buildColorGrid();
+    });
+
+    qs('#start-diag-btn').addEventListener('click', () => {
+      diagStepIndex = 0;
+      state = patchAppState({ diagWarmCool: [] });
+      showCard('color-entry-card', false);
+      showCard('diag-step1-card', true);
+      renderDiag1();
+    });
+
+    qs('#color-back-btn').addEventListener('click', () => {
+      showCard('color-select-card', false);
+      showCard('color-entry-card', true);
+    });
+
+    qs('#color-next-btn').addEventListener('click', () => {
+      if (!state.personalColor) {
+        alert('퍼스널컬러를 선택해주세요!');
+        return;
+      }
+      patchAppState({ currentQ: 0, surveyAnswers: {}, result: null, selectedCat: '상의' });
+      navigateTo('./survey.html');
+    });
+
+    qs('#diag1-back-btn').addEventListener('click', () => {
+      showCard('diag-step1-card', false);
+      showCard('color-entry-card', true);
+      state = patchAppState({ diagWarmCool: [] });
+      diagStepIndex = 0;
+    });
+
+    qs('#diag2-back-btn').addEventListener('click', () => {
+      showCard('diag-step2-card', false);
+      showCard('diag-step1-card', true);
+      diagStepIndex = 0;
+      state = patchAppState({ diagWarmCool: [] });
+      renderDiag1();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      resetAppState();
+      state = getAppState();
+      showIntro();
+      buildColorGrid();
+    });
+  </script>
+</body>
+</html>
