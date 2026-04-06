@@ -3,25 +3,33 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from item_feature_builder import build_item_feature_list
-from recommender import filter_items_by_gender, filter_items_by_tpo, find_top_style_match, rank_items
-from survey_parser import build_user_profile
+from item_feature_builder import load_dataset_item_records
+from recommender import (
+    collect_top_similarity_matches,
+    derive_style_profile_from_similarity_matches,
+    filter_items_by_user_gender,
+    find_highest_similarity_item_match,
+    rank_recommendation_candidates,
+)
+from survey_parser import create_survey_profile
 
 
-def run_example(name: str, survey_payload: dict, *, dataset_dir: str | None = None) -> None:
-    profile = build_user_profile(survey_payload).to_dict()
-    items = build_item_feature_list(dataset_dir=dataset_dir, allow_mock=True)
-    filtered_items = filter_items_by_gender(filter_items_by_tpo(items, profile.get("tpo_preference", "")), profile["gender"])
-    ranked = rank_items(profile, filtered_items or items, top_n=5)
-    top_match = find_top_style_match(profile, filtered_items or items)
+def run_demo_scenario(scenario_name: str, survey_answers: dict, *, dataset_dir: str | None = None) -> None:
+    survey_profile = create_survey_profile(survey_answers).to_dict()
+    dataset_items = load_dataset_item_records(dataset_dir=dataset_dir, allow_mock=True)
+    gender_filtered_items = filter_items_by_user_gender(dataset_items, survey_profile["gender"])
+    top_similarity_matches = collect_top_similarity_matches(survey_profile, gender_filtered_items or dataset_items, top_k=20)
+    inferred_style_profile = derive_style_profile_from_similarity_matches(top_similarity_matches)
+    ranked_recommendations = rank_recommendation_candidates(survey_profile, gender_filtered_items or dataset_items, top_n=5)
+    top_match = find_highest_similarity_item_match(survey_profile, gender_filtered_items or dataset_items)
 
-    print(f"\n=== {name} ===")
+    print(f"\n=== {scenario_name} ===")
     print(
         json.dumps(
             {
-                "user_profile": profile,
-                "analysis_text": f"알고리즘 분석 결과, 당신의 취향은 **[{top_match['era']}년대]**의 **[{top_match['style']}]**과 {top_match['similarity_percent']}% 일치합니다",
-                "top5": ranked,
+                "user_profile": survey_profile,
+                "analysis_text": f"알고리즘 분석 결과, 당신의 취향은 **[{top_match['era']}년대]**의 **[{inferred_style_profile['primary_group']}]**과 {top_match['similarity_percent']}% 일치합니다",
+                "top5": ranked_recommendations,
             },
             ensure_ascii=False,
             indent=2,
@@ -29,14 +37,14 @@ def run_example(name: str, survey_payload: dict, *, dataset_dir: str | None = No
     )
 
 
-def main() -> None:
+def run_demo() -> None:
     sample_dataset_dir = None
     project_root = Path(__file__).resolve().parent
     extracted_candidate = project_root / "sample_data"
     if extracted_candidate.exists():
         sample_dataset_dir = str(extracted_candidate)
 
-    run_example(
+    run_demo_scenario(
         "직접 퍼스널컬러 선택 예시",
         {
             "gender": "여성",
@@ -54,7 +62,7 @@ def main() -> None:
         dataset_dir=sample_dataset_dir,
     )
 
-    run_example(
+    run_demo_scenario(
         "모르겠음 분기 예시",
         {
             "gender": "남성",
@@ -78,4 +86,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    run_demo()

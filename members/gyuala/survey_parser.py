@@ -4,21 +4,21 @@ from dataclasses import asdict, dataclass
 from typing import Any, Dict, List
 
 from fashion_config import (
-    COOL_BRANCH_MAP,
-    PERSONAL_COLOR_DISPLAY,
-    PERSONAL_COLOR_NORMALIZATION,
-    PERSONAL_COLOR_SEARCH_KEYWORDS,
-    REPRESENTATIVE_COLORS,
-    STYLE_CODES,
-    STYLE_DISPLAY,
-    STYLE_SEARCH_KEYWORDS,
-    STYLE_QUESTION_RULES,
-    WARM_BRANCH_MAP,
+    COOL_PERSONAL_COLOR_BRANCH_MAP,
+    PERSONAL_COLOR_ALIASES,
+    PERSONAL_COLOR_KEYWORD_MAP,
+    PERSONAL_COLOR_LABELS,
+    PERSONAL_COLOR_REPRESENTATIVE_COLORS,
+    STYLE_CODE_ORDER,
+    STYLE_KEYWORD_MAP,
+    STYLE_LABELS,
+    STYLE_QUESTION_OPTION_STYLE_MAP,
+    WARM_PERSONAL_COLOR_BRANCH_MAP,
 )
 
 
 @dataclass
-class UserProfile:
+class SurveyProfile:
     gender: str
     personal_color: str
     personal_color_display: str
@@ -36,7 +36,7 @@ class UserProfile:
         return asdict(self)
 
 
-def normalize_gender(value: str | None) -> str:
+def normalize_survey_gender(value: str | None) -> str:
     if not value:
         return "U"
     normalized = str(value).strip().upper()
@@ -57,96 +57,103 @@ def normalize_gender(value: str | None) -> str:
     return aliases.get(normalized, "U")
 
 
-def normalize_answer(value: str | None) -> str:
+def normalize_choice_answer(value: str | None) -> str:
     if value is None:
         return ""
     return str(value).strip().upper()
 
 
-def normalize_personal_color(value: str | None) -> str:
+def normalize_personal_color_code(value: str | None) -> str:
     if value is None:
         return "unknown"
     normalized = str(value).strip()
-    return PERSONAL_COLOR_NORMALIZATION.get(normalized, PERSONAL_COLOR_NORMALIZATION.get(normalized.lower(), "unknown"))
+    return PERSONAL_COLOR_ALIASES.get(normalized, PERSONAL_COLOR_ALIASES.get(normalized.lower(), "unknown"))
 
 
-def infer_personal_color(responses: Dict[str, Any]) -> str:
-    selected = normalize_personal_color(responses.get("personal_color"))
+def resolve_personal_color_code(responses: Dict[str, Any]) -> str:
+    selected = normalize_personal_color_code(responses.get("personal_color"))
     if selected != "unknown":
         return selected
 
-    warm_votes = sum(normalize_answer(responses.get(key)) == "A" for key in ("Q1", "Q2", "Q3"))
-    cool_votes = sum(normalize_answer(responses.get(key)) == "B" for key in ("Q1", "Q2", "Q3"))
+    warm_votes = sum(normalize_choice_answer(responses.get(key)) == "A" for key in ("Q1", "Q2", "Q3"))
+    cool_votes = sum(normalize_choice_answer(responses.get(key)) == "B" for key in ("Q1", "Q2", "Q3"))
 
     if warm_votes == cool_votes:
         return "unknown"
 
     if warm_votes > cool_votes:
-        return WARM_BRANCH_MAP.get(normalize_answer(responses.get("Qwarm")), "unknown")
+        return WARM_PERSONAL_COLOR_BRANCH_MAP.get(normalize_choice_answer(responses.get("Qwarm")), "unknown")
 
-    return COOL_BRANCH_MAP.get(normalize_answer(responses.get("Qcool")), "unknown")
-
-
-def compute_style_scores(responses: Dict[str, Any]) -> Dict[str, int]:
-    scores = {style: 0 for style in STYLE_CODES}
-    for question, options in STYLE_QUESTION_RULES.items():
-        answer = normalize_answer(responses.get(question))
-        for style_code in options.get(answer, []):
-            scores[style_code] += 1
-    return scores
+    return COOL_PERSONAL_COLOR_BRANCH_MAP.get(normalize_choice_answer(responses.get("Qcool")), "unknown")
 
 
-def resolve_primary_and_secondary_styles(style_scores: Dict[str, int]) -> tuple[str, List[str]]:
-    ranked = sorted(style_scores.items(), key=lambda item: (-item[1], STYLE_CODES.index(item[0])))
-    primary_style = ranked[0][0]
-    primary_score = ranked[0][1]
+def calculate_style_score_map(responses: Dict[str, Any]) -> Dict[str, int]:
+    style_score_map = {style_code: 0 for style_code in STYLE_CODE_ORDER}
+    for question_code, answer_style_map in STYLE_QUESTION_OPTION_STYLE_MAP.items():
+        selected_option = normalize_choice_answer(responses.get(question_code))
+        for style_code in answer_style_map.get(selected_option, []):
+            style_score_map[style_code] += 1
+    return style_score_map
 
-    secondary_styles: List[str] = []
-    for style_code, score in ranked[1:]:
-        if score <= 0:
+
+def determine_ranked_style_preferences(style_score_map: Dict[str, int]) -> tuple[str, List[str]]:
+    ranked_style_scores = sorted(
+        style_score_map.items(),
+        key=lambda ranked_entry: (-ranked_entry[1], STYLE_CODE_ORDER.index(ranked_entry[0])),
+    )
+    primary_style_code = ranked_style_scores[0][0]
+    primary_style_score = ranked_style_scores[0][1]
+
+    secondary_style_codes: List[str] = []
+    for style_code, style_score in ranked_style_scores[1:]:
+        if style_score <= 0:
             continue
-        if len(secondary_styles) >= 2:
+        if len(secondary_style_codes) >= 2:
             break
-        if score == primary_score or not secondary_styles or score == ranked[1][1]:
-            secondary_styles.append(style_code)
-    return primary_style, secondary_styles
+        if (
+            style_score == primary_style_score
+            or not secondary_style_codes
+            or style_score == ranked_style_scores[1][1]
+        ):
+            secondary_style_codes.append(style_code)
+    return primary_style_code, secondary_style_codes
 
 
-def infer_fit_preference(responses: Dict[str, Any]) -> str:
-    answer = normalize_answer(responses.get("Qstyle_3"))
-    if answer == "A":
+def determine_fit_preference(responses: Dict[str, Any]) -> str:
+    fit_answer = normalize_choice_answer(responses.get("Qstyle_3"))
+    if fit_answer == "A":
         return "T"
-    if answer == "B":
+    if fit_answer == "B":
         return "L"
     return "T"
 
 
-def build_user_profile(responses: Dict[str, Any]) -> UserProfile:
-    personal_color = infer_personal_color(responses)
-    style_scores = compute_style_scores(responses)
-    primary_style, secondary_styles = resolve_primary_and_secondary_styles(style_scores)
-    fit_preference = infer_fit_preference(responses)
+def create_survey_profile(responses: Dict[str, Any]) -> SurveyProfile:
+    personal_color_code = resolve_personal_color_code(responses)
+    style_score_map = calculate_style_score_map(responses)
+    primary_style_code, secondary_style_codes = determine_ranked_style_preferences(style_score_map)
+    fit_preference_code = determine_fit_preference(responses)
 
-    return UserProfile(
-        gender=normalize_gender(responses.get("gender")),
-        personal_color=personal_color,
-        personal_color_display=PERSONAL_COLOR_DISPLAY.get(personal_color, "모르겠음"),
-        representative_colors=REPRESENTATIVE_COLORS.get(personal_color, []),
-        primary_style=primary_style,
-        secondary_styles=secondary_styles,
-        fit_preference=fit_preference,
-        style_scores=style_scores,
-        style_display={primary_style: STYLE_DISPLAY.get(primary_style, primary_style)},
-        style_search_keywords=_build_style_search_keywords(primary_style, secondary_styles),
-        color_search_keywords=PERSONAL_COLOR_SEARCH_KEYWORDS.get(personal_color, []),
-        tpo_preference=normalize_answer(responses.get("Qstyle_9")),
+    return SurveyProfile(
+        gender=normalize_survey_gender(responses.get("gender")),
+        personal_color=personal_color_code,
+        personal_color_display=PERSONAL_COLOR_LABELS.get(personal_color_code, "모르겠음"),
+        representative_colors=PERSONAL_COLOR_REPRESENTATIVE_COLORS.get(personal_color_code, []),
+        primary_style=primary_style_code,
+        secondary_styles=secondary_style_codes,
+        fit_preference=fit_preference_code,
+        style_scores=style_score_map,
+        style_display={primary_style_code: STYLE_LABELS.get(primary_style_code, primary_style_code)},
+        style_search_keywords=collect_style_search_keywords(primary_style_code, secondary_style_codes),
+        color_search_keywords=PERSONAL_COLOR_KEYWORD_MAP.get(personal_color_code, []),
+        tpo_preference=normalize_choice_answer(responses.get("Qstyle_9")),
     )
 
 
-def _build_style_search_keywords(primary_style: str, secondary_styles: List[str]) -> List[str]:
+def collect_style_search_keywords(primary_style_code: str, secondary_style_codes: List[str]) -> List[str]:
     keywords: List[str] = []
-    for style_code in [primary_style, *secondary_styles]:
-        for keyword in STYLE_SEARCH_KEYWORDS.get(style_code, []):
+    for style_code in [primary_style_code, *secondary_style_codes]:
+        for keyword in STYLE_KEYWORD_MAP.get(style_code, []):
             if keyword not in keywords:
                 keywords.append(keyword)
     return keywords

@@ -6,136 +6,136 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
 
-from fashion_config import MOCK_ITEMS
+from fashion_config import MOCK_DATASET_ITEMS
 
-QUESTION_KEYS = ["Q3", "Q411", "Q412", "Q413", "Q414"] + [f"Q42{i:02d}" for i in range(1, 17)]
-IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
-
-
-def extract_sample_zip(zip_path: str | Path, extract_dir: str | Path) -> Path:
-    zip_file = Path(zip_path)
-    if not zip_file.exists():
-        raise FileNotFoundError(f"zip file not found: {zip_file}")
-
-    destination = Path(extract_dir)
-    destination.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(zip_file, "r") as archive:
-        archive.extractall(destination)
-    return destination
+DATASET_SURVEY_FIELD_KEYS = ["Q3", "Q411", "Q412", "Q413", "Q414"] + [f"Q42{i:02d}" for i in range(1, 17)]
+IMAGE_FILE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 
 
-def _extract_if_needed(zip_path: str | Path, extract_dir: str | Path) -> Path:
-    destination = Path(extract_dir)
-    if destination.exists() and any(destination.rglob("*.json")):
-        return destination
-    return extract_sample_zip(zip_path, extract_dir)
+def extract_dataset_zip_archive(zip_path: str | Path, extract_dir: str | Path) -> Path:
+    zip_archive_path = Path(zip_path)
+    if not zip_archive_path.exists():
+        raise FileNotFoundError(f"zip file not found: {zip_archive_path}")
+
+    extract_path = Path(extract_dir)
+    extract_path.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(zip_archive_path, "r") as archive:
+        archive.extractall(extract_path)
+    return extract_path
 
 
-def ensure_dataset_extracted(zip_path: str | Path, extract_dir: str | Path) -> Path:
-    return _extract_if_needed(zip_path, extract_dir)
+def _ensure_extracted_dataset_directory(zip_path: str | Path, extract_dir: str | Path) -> Path:
+    extract_path = Path(extract_dir)
+    if extract_path.exists() and any(extract_path.rglob("*.json")):
+        return extract_path
+    return extract_dataset_zip_archive(zip_path, extract_dir)
 
 
-def normalize_dataset_root(dataset_dir: str | Path) -> Path:
-    root = Path(dataset_dir)
-    nested_root = root / "Sample"
-    if nested_root.exists():
-        return nested_root
-    return root
+def ensure_dataset_archive_extracted(zip_path: str | Path, extract_dir: str | Path) -> Path:
+    return _ensure_extracted_dataset_directory(zip_path, extract_dir)
 
 
-def load_label_jsons(root_dir: str | Path) -> List[Path]:
-    root = normalize_dataset_root(root_dir)
-    if not root.exists():
-        raise FileNotFoundError(f"dataset directory not found: {root}")
-    return sorted(root.rglob("*.json"))
+def resolve_dataset_root_directory(dataset_dir: str | Path) -> Path:
+    dataset_root_path = Path(dataset_dir)
+    nested_sample_directory = dataset_root_path / "Sample"
+    if nested_sample_directory.exists():
+        return nested_sample_directory
+    return dataset_root_path
 
 
-def _find_nested_value(payload: Any, key: str) -> Any:
+def discover_dataset_label_files(root_dir: str | Path) -> List[Path]:
+    resolved_root_dir = resolve_dataset_root_directory(root_dir)
+    if not resolved_root_dir.exists():
+        raise FileNotFoundError(f"dataset directory not found: {resolved_root_dir}")
+    return sorted(resolved_root_dir.rglob("*.json"))
+
+
+def _find_nested_field_value(payload: Any, key: str) -> Any:
     if isinstance(payload, dict):
         if key in payload:
             return payload[key]
         for value in payload.values():
-            found = _find_nested_value(value, key)
+            found = _find_nested_field_value(value, key)
             if found is not None:
                 return found
     elif isinstance(payload, list):
         for value in payload:
-            found = _find_nested_value(value, key)
+            found = _find_nested_field_value(value, key)
             if found is not None:
                 return found
     return None
 
 
-def _collect_question_values(payload: Any) -> Dict[str, int]:
-    result: Dict[str, int] = {}
-    survey_blob = _find_nested_value(payload, "survey")
-    for key in QUESTION_KEYS:
-        raw_value = None
-        if isinstance(survey_blob, dict):
-            raw_value = survey_blob.get(key)
-        if raw_value is None:
-            raw_value = _find_nested_value(payload, key)
-        if raw_value is None:
+def _extract_dataset_survey_values(payload: Any) -> Dict[str, int]:
+    extracted_values: Dict[str, int] = {}
+    survey_section = _find_nested_field_value(payload, "survey")
+    for question_code in DATASET_SURVEY_FIELD_KEYS:
+        raw_question_value = None
+        if isinstance(survey_section, dict):
+            raw_question_value = survey_section.get(question_code)
+        if raw_question_value is None:
+            raw_question_value = _find_nested_field_value(payload, question_code)
+        if raw_question_value is None:
             continue
         try:
-            result[key] = int(raw_value)
+            extracted_values[question_code] = int(raw_question_value)
         except (TypeError, ValueError):
             continue
-    return result
+    return extracted_values
 
 
-def _resolve_image_path(json_path: Path, payload: Dict[str, Any]) -> str:
-    candidates = [
-        _find_nested_value(payload, "image_path"),
-        _find_nested_value(payload, "image"),
-        _find_nested_value(payload, "img_path"),
-        _find_nested_value(payload, "source"),
+def _resolve_local_image_path(json_path: Path, payload: Dict[str, Any]) -> str:
+    image_path_candidates = [
+        _find_nested_field_value(payload, "image_path"),
+        _find_nested_field_value(payload, "image"),
+        _find_nested_field_value(payload, "img_path"),
+        _find_nested_field_value(payload, "source"),
     ]
-    for candidate in candidates:
-        if isinstance(candidate, str) and candidate:
-            possible = (json_path.parent / candidate).resolve()
-            if possible.exists():
-                return str(possible)
-            return candidate
+    for image_candidate in image_path_candidates:
+        if isinstance(image_candidate, str) and image_candidate:
+            possible_image_path = (json_path.parent / image_candidate).resolve()
+            if possible_image_path.exists():
+                return str(possible_image_path)
+            return image_candidate
 
-    stem = json_path.stem
+    file_stem = json_path.stem
     for image_path in json_path.parent.rglob("*"):
-        if image_path.suffix.lower() in IMAGE_EXTENSIONS and image_path.stem == stem:
+        if image_path.suffix.lower() in IMAGE_FILE_EXTENSIONS and image_path.stem == file_stem:
             return str(image_path.resolve())
     return str(json_path.resolve())
 
 
-def _pick_first(payload: Dict[str, Any], keys: Iterable[str], default: str = "unknown") -> str:
+def _select_first_available_string(payload: Dict[str, Any], keys: Iterable[str], default: str = "unknown") -> str:
     for key in keys:
-        value = _find_nested_value(payload, key)
+        value = _find_nested_field_value(payload, key)
         if value not in (None, ""):
             return str(value)
     return default
 
 
-def parse_item_feature(json_path: str | Path) -> Dict[str, Any] | None:
+def parse_dataset_item_from_label_file(json_path: str | Path) -> Dict[str, Any] | None:
     json_file = Path(json_path)
     try:
         payload = json.loads(json_file.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, UnicodeDecodeError):
         return None
 
-    features = _collect_question_values(payload)
-    if not features:
+    dataset_feature_values = _extract_dataset_survey_values(payload)
+    if not dataset_feature_values:
         return None
 
-    item = {
-        "item_id": _pick_first(payload, ("item_id", "id", "file_id"), default=json_file.stem),
-        "image_path": _resolve_image_path(json_file, payload),
-        "gender": _pick_first(payload, ("gender", "model_gender", "sex"), default="U"),
-        "era": _pick_first(payload, ("era", "year", "season"), default="unknown"),
-        "style": _pick_first(payload, ("style", "look", "category"), default="unknown"),
+    parsed_item_record = {
+        "item_id": _select_first_available_string(payload, ("item_id", "id", "file_id"), default=json_file.stem),
+        "image_path": _resolve_local_image_path(json_file, payload),
+        "gender": _select_first_available_string(payload, ("gender", "model_gender", "sex"), default="U"),
+        "era": _select_first_available_string(payload, ("era", "year", "season"), default="unknown"),
+        "style": _select_first_available_string(payload, ("style", "look", "category"), default="unknown"),
     }
-    item.update(features)
-    return item
+    parsed_item_record.update(dataset_feature_values)
+    return parsed_item_record
 
 
-def parse_item_feature_with_index(
+def parse_dataset_item_from_label_file_with_image_index(
     json_path: str | Path,
     image_index: Dict[str, str],
 ) -> Dict[str, Any] | None:
@@ -145,73 +145,73 @@ def parse_item_feature_with_index(
     except (json.JSONDecodeError, UnicodeDecodeError):
         return None
 
-    features = _collect_question_values(payload)
-    if not features:
+    dataset_feature_values = _extract_dataset_survey_values(payload)
+    if not dataset_feature_values:
         return None
 
-    image_name = _pick_first(payload, ("imgName", "image_path", "image"), default="")
-    image_path = image_index.get(image_name, "")
+    image_name = _select_first_available_string(payload, ("imgName", "image_path", "image"), default="")
+    resolved_image_path = image_index.get(image_name, "")
 
-    item = {
-        "item_id": _pick_first(payload, ("item_id", "id", "file_id", "E_id"), default=json_file.stem),
-        "image_path": image_path,
-        "gender": _pick_first(payload, ("gender", "model_gender", "sex"), default="U"),
-        "era": _pick_first(payload, ("era", "year", "season"), default="unknown"),
-        "style": _pick_first(payload, ("style", "look", "category"), default="unknown"),
+    parsed_item_record = {
+        "item_id": _select_first_available_string(payload, ("item_id", "id", "file_id", "E_id"), default=json_file.stem),
+        "image_path": resolved_image_path,
+        "gender": _select_first_available_string(payload, ("gender", "model_gender", "sex"), default="U"),
+        "era": _select_first_available_string(payload, ("era", "year", "season"), default="unknown"),
+        "style": _select_first_available_string(payload, ("style", "look", "category"), default="unknown"),
         "label_path": str(json_file.resolve()),
     }
-    item.update(features)
-    return item
+    parsed_item_record.update(dataset_feature_values)
+    return parsed_item_record
 
 
-def parse_item_feature_from_payload(
+def parse_dataset_item_from_label_payload(
     payload: Dict[str, Any],
     *,
     json_identifier: str,
     image_locator: str,
 ) -> Dict[str, Any] | None:
-    features = _collect_question_values(payload)
-    if not features:
+    dataset_feature_values = _extract_dataset_survey_values(payload)
+    if not dataset_feature_values:
         return None
 
-    item = {
-        "item_id": _pick_first(payload, ("item_id", "id", "file_id", "E_id"), default=Path(json_identifier).stem),
+    parsed_item_record = {
+        "item_id": _select_first_available_string(payload, ("item_id", "id", "file_id", "E_id"), default=Path(json_identifier).stem),
         "image_path": image_locator,
-        "gender": _pick_first(payload, ("gender", "model_gender", "sex"), default="U"),
-        "era": _pick_first(payload, ("era", "year", "season"), default="unknown"),
-        "style": _pick_first(payload, ("style", "look", "category"), default="unknown"),
+        "gender": _select_first_available_string(payload, ("gender", "model_gender", "sex"), default="U"),
+        "era": _select_first_available_string(payload, ("era", "year", "season"), default="unknown"),
+        "style": _select_first_available_string(payload, ("style", "look", "category"), default="unknown"),
         "label_path": json_identifier,
     }
-    item.update(features)
-    return item
+    parsed_item_record.update(dataset_feature_values)
+    return parsed_item_record
 
 
-def _build_zip_image_index(zip_file: zipfile.ZipFile) -> Dict[str, str]:
-    index: Dict[str, str] = {}
+def _create_zip_image_path_index(zip_file: zipfile.ZipFile) -> Dict[str, str]:
+    image_path_index: Dict[str, str] = {}
     for member in zip_file.namelist():
         lower_name = member.lower()
         if lower_name.endswith((".jpg", ".jpeg", ".png", ".webp")):
-            index.setdefault(Path(member).name, member)
-    return index
+            image_path_index.setdefault(Path(member).name, member)
+    return image_path_index
 
 
-def _build_directory_image_index(dataset_dir: Path) -> Dict[str, str]:
-    index: Dict[str, str] = {}
+def _create_directory_image_path_index(dataset_dir: Path) -> Dict[str, str]:
+    image_path_index: Dict[str, str] = {}
     for image_file in dataset_dir.rglob("*"):
-        if image_file.suffix.lower() in IMAGE_EXTENSIONS:
-            index.setdefault(image_file.name, str(image_file.resolve()))
-    return index
+        if image_file.suffix.lower() in IMAGE_FILE_EXTENSIONS:
+            image_path_index.setdefault(image_file.name, str(image_file.resolve()))
+    return image_path_index
 
 
 @lru_cache(maxsize=4)
-def _load_items_from_zip(zip_path_str: str) -> tuple[Dict[str, Any], ...]:
-    zip_path = Path(zip_path_str)
-    if not zip_path.exists():
-        raise FileNotFoundError(f"zip file not found: {zip_path}")
+def _load_dataset_items_from_zip_cache(zip_path_str: str) -> tuple[Dict[str, Any], ...]:
+    zip_archive_path = Path(zip_path_str)
+    if not zip_archive_path.exists():
+        raise FileNotFoundError(f"zip file not found: {zip_archive_path}")
 
-    items: List[Dict[str, Any]] = []
-    with zipfile.ZipFile(zip_path, "r") as archive:
-        image_index = _build_zip_image_index(archive)
+    dataset_items: List[Dict[str, Any]] = []
+    with zipfile.ZipFile(zip_archive_path, "r") as archive:
+        image_index = _create_zip_image_path_index(archive)
         for member in archive.namelist():
             if not member.lower().endswith(".json"):
                 continue
@@ -220,31 +220,31 @@ def _load_items_from_zip(zip_path_str: str) -> tuple[Dict[str, Any], ...]:
             except (json.JSONDecodeError, UnicodeDecodeError):
                 continue
 
-            image_name = _pick_first(payload, ("imgName", "image_path", "image"), default="")
+            image_name = _select_first_available_string(payload, ("imgName", "image_path", "image"), default="")
             image_locator = image_index.get(image_name, image_name)
-            parsed = parse_item_feature_from_payload(
+            parsed_item_record = parse_dataset_item_from_label_payload(
                 payload,
                 json_identifier=member,
                 image_locator=image_locator,
             )
-            if parsed:
-                items.append(parsed)
-    return tuple(items)
+            if parsed_item_record:
+                dataset_items.append(parsed_item_record)
+    return tuple(dataset_items)
 
 
 @lru_cache(maxsize=4)
-def _load_items_from_directory(dataset_dir_str: str) -> tuple[Dict[str, Any], ...]:
-    resolved_dataset_dir = normalize_dataset_root(dataset_dir_str).resolve()
-    image_index = _build_directory_image_index(resolved_dataset_dir)
-    items: List[Dict[str, Any]] = []
-    for json_file in load_label_jsons(resolved_dataset_dir):
-        parsed = parse_item_feature_with_index(json_file, image_index)
-        if parsed:
-            items.append(parsed)
-    return tuple(items)
+def _load_dataset_items_from_directory_cache(dataset_dir_str: str) -> tuple[Dict[str, Any], ...]:
+    resolved_dataset_dir = resolve_dataset_root_directory(dataset_dir_str).resolve()
+    image_index = _create_directory_image_path_index(resolved_dataset_dir)
+    dataset_items: List[Dict[str, Any]] = []
+    for json_file in discover_dataset_label_files(resolved_dataset_dir):
+        parsed_item_record = parse_dataset_item_from_label_file_with_image_index(json_file, image_index)
+        if parsed_item_record:
+            dataset_items.append(parsed_item_record)
+    return tuple(dataset_items)
 
 
-def build_item_feature_list(
+def load_dataset_item_records(
     *,
     zip_path: str | Path | None = None,
     extract_dir: str | Path | None = None,
@@ -254,25 +254,25 @@ def build_item_feature_list(
     if dataset_dir:
         resolved_dataset_dir = Path(dataset_dir)
         if resolved_dataset_dir.exists():
-            items = list(_load_items_from_directory(str(resolved_dataset_dir.resolve())))
-            if items:
-                return [dict(item) for item in items]
+            dataset_items = list(_load_dataset_items_from_directory_cache(str(resolved_dataset_dir.resolve())))
+            if dataset_items:
+                return [dict(item) for item in dataset_items]
 
     if zip_path:
-        zip_file = Path(zip_path)
-        if zip_file.exists():
-            items = list(_load_items_from_zip(str(zip_file.resolve())))
-            if items:
-                return [dict(item) for item in items]
+        zip_archive_path = Path(zip_path)
+        if zip_archive_path.exists():
+            dataset_items = list(_load_dataset_items_from_zip_cache(str(zip_archive_path.resolve())))
+            if dataset_items:
+                return [dict(item) for item in dataset_items]
 
     if zip_path and extract_dir:
-        resolved_dataset_dir = _extract_if_needed(zip_path, extract_dir)
+        resolved_dataset_dir = _ensure_extracted_dataset_directory(zip_path, extract_dir)
         if resolved_dataset_dir.exists():
-            items = list(_load_items_from_directory(str(resolved_dataset_dir.resolve())))
-            if items:
-                return [dict(item) for item in items]
+            dataset_items = list(_load_dataset_items_from_directory_cache(str(resolved_dataset_dir.resolve())))
+            if dataset_items:
+                return [dict(item) for item in dataset_items]
 
     if allow_mock:
-        return [dict(item) for item in MOCK_ITEMS]
+        return [dict(item) for item in MOCK_DATASET_ITEMS]
 
     raise ValueError("no valid dataset items found and mock fallback disabled")

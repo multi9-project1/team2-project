@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, List
 
-PERSONAL_COLOR_DISPLAY: Dict[str, str] = {
+PERSONAL_COLOR_LABELS: Dict[str, str] = {
     "spring_light": "봄 라이트",
     "spring_bright": "봄 브라이트",
     "spring_warm": "봄 웜",
@@ -18,7 +18,7 @@ PERSONAL_COLOR_DISPLAY: Dict[str, str] = {
     "unknown": "모르겠음",
 }
 
-PERSONAL_COLOR_NORMALIZATION: Dict[str, str] = {
+PERSONAL_COLOR_ALIASES: Dict[str, str] = {
     "spring_light": "spring_light",
     "spring_bright": "spring_bright",
     "spring_warm": "spring_warm",
@@ -47,7 +47,7 @@ PERSONAL_COLOR_NORMALIZATION: Dict[str, str] = {
     "unknown": "unknown",
 }
 
-REPRESENTATIVE_COLORS: Dict[str, List[str]] = {
+PERSONAL_COLOR_REPRESENTATIVE_COLORS: Dict[str, List[str]] = {
     "spring_light": ["페일 옐로우", "라이트 코랄"],
     "spring_bright": ["비비드 오렌지", "애플 그린"],
     "spring_warm": ["골든 옐로우", "웜 핑크"],
@@ -63,7 +63,7 @@ REPRESENTATIVE_COLORS: Dict[str, List[str]] = {
     "unknown": [],
 }
 
-PERSONAL_COLOR_TARGETS: Dict[str, tuple[int, int, int]] = {
+PERSONAL_COLOR_DATASET_TARGETS: Dict[str, tuple[int, int, int]] = {
     "spring_light": (2, 2, 2),
     "spring_bright": (2, 2, 2),
     "spring_warm": (2, 2, 2),
@@ -78,7 +78,7 @@ PERSONAL_COLOR_TARGETS: Dict[str, tuple[int, int, int]] = {
     "winter_cool": (2, 1, 1),
 }
 
-STYLE_CODES: List[str] = [
+STYLE_CODE_ORDER: List[str] = [
     "sophisticated",
     "modern_minimal",
     "feminine",
@@ -91,7 +91,7 @@ STYLE_CODES: List[str] = [
     "retro",
 ]
 
-STYLE_DISPLAY: Dict[str, str] = {
+STYLE_LABELS: Dict[str, str] = {
     "sophisticated": "소피스티케이티드",
     "modern_minimal": "모던/미니멀",
     "feminine": "페미닌",
@@ -104,7 +104,7 @@ STYLE_DISPLAY: Dict[str, str] = {
     "retro": "레트로",
 }
 
-STYLE_SEARCH_KEYWORDS: Dict[str, List[str]] = {
+STYLE_KEYWORD_MAP: Dict[str, List[str]] = {
     "sophisticated": ["세련된", "소피스티케이티드"],
     "modern_minimal": ["미니멀", "모던"],
     "feminine": ["페미닌", "여성스러운"],
@@ -117,7 +117,7 @@ STYLE_SEARCH_KEYWORDS: Dict[str, List[str]] = {
     "retro": ["레트로", "빈티지"],
 }
 
-PERSONAL_COLOR_SEARCH_KEYWORDS: Dict[str, List[str]] = {
+PERSONAL_COLOR_KEYWORD_MAP: Dict[str, List[str]] = {
     "spring_light": ["라이트 핑크", "페일 옐로우", "코랄"],
     "spring_bright": ["비비드 오렌지", "애플 그린", "브라이트 코랄"],
     "spring_warm": ["골든 옐로우", "웜 핑크", "피치"],
@@ -133,7 +133,7 @@ PERSONAL_COLOR_SEARCH_KEYWORDS: Dict[str, List[str]] = {
     "unknown": [],
 }
 
-DATASET_STYLE_DISPLAY: Dict[str, str] = {
+DATASET_STYLE_LABELS: Dict[str, str] = {
     "athleisure": "애슬레저룩",
     "bodyconscious": "바디컨셔스룩",
     "bold": "볼드룩",
@@ -163,7 +163,7 @@ DATASET_STYLE_DISPLAY: Dict[str, str] = {
     "sportivecasual": "스포티브 캐주얼룩",
 }
 
-DATASET_STYLE_TO_GROUP: Dict[str, str] = {
+DATASET_STYLE_GROUP_LABELS: Dict[str, str] = {
     "cityglam": "소피스티케이티드",
     "powersuit": "소피스티케이티드",
     "classic": "소피스티케이티드",
@@ -193,7 +193,7 @@ DATASET_STYLE_TO_GROUP: Dict[str, str] = {
     "hippie": "레트로/빈티지",
 }
 
-GROUP_DISPLAY_TO_STYLE_CODE: Dict[str, str] = {
+STYLE_GROUP_TO_STYLE_CODE: Dict[str, str] = {
     "소피스티케이티드": "sophisticated",
     "페미닌": "feminine",
     "로맨틱": "romantic",
@@ -206,7 +206,7 @@ GROUP_DISPLAY_TO_STYLE_CODE: Dict[str, str] = {
     "레트로/빈티지": "retro",
 }
 
-STYLE_RANKING_WEIGHTS: Dict[str, Dict[str, float]] = {
+STYLE_RANKING_WEIGHT_MAP: Dict[str, Dict[str, float]] = {
     "default": {"style": 0.75, "fit": 0.20, "color": 0.05, "group_bonus": 0.0},
     "retro": {"style": 0.82, "fit": 0.08, "color": 0.05, "group_bonus": 0.05},
     "hipster_punk": {"style": 0.82, "fit": 0.08, "color": 0.05, "group_bonus": 0.05},
@@ -214,7 +214,7 @@ STYLE_RANKING_WEIGHTS: Dict[str, Dict[str, float]] = {
     "sporty": {"style": 0.70, "fit": 0.20, "color": 0.05, "group_bonus": 0.05},
 }
 
-STYLE_QUESTION_RULES: Dict[str, Dict[str, List[str]]] = {
+STYLE_QUESTION_OPTION_STYLE_MAP: Dict[str, Dict[str, List[str]]] = {
     "Qstyle_1": {
         "A": ["sophisticated", "modern_minimal", "mannish"],
         "B": ["casual", "romantic", "feminine"],
@@ -245,7 +245,7 @@ STYLE_QUESTION_RULES: Dict[str, Dict[str, List[str]]] = {
     },
 }
 
-STYLE_FEATURE_MAP: Dict[str, List[str]] = {
+STYLE_DATASET_FEATURE_MAP: Dict[str, List[str]] = {
     "sophisticated": ["Q4202", "Q4204"],
     "feminine": ["Q4214", "Q4216"],
     "hipster_punk": ["Q4209", "Q4206", "Q4207"],
@@ -258,40 +258,40 @@ STYLE_FEATURE_MAP: Dict[str, List[str]] = {
     "retro": ["Q4207"],
 }
 
-TPO_Q3_MAP: Dict[str, List[int]] = {
+TPO_OPTION_TO_DATASET_Q3_VALUES: Dict[str, List[int]] = {
     "A": [1, 5],
     "B": [2, 4],
     "C": [3],
     "D": [6, 7],
 }
 
-TPO_DEEPLINK_KEYWORD: Dict[str, str] = {
+TPO_OPTION_TO_DEEPLINK_KEYWORD: Dict[str, str] = {
     "A": "출근룩",
     "B": "데이트룩",
     "C": "하객룩",
     "D": "레저룩",
 }
 
-FIT_SCORE_MAP = {
+FIT_PREFERENCE_TO_Q411_SCORE = {
     "T": {2: 1.0, 3: 0.8, 1: 0.2},
     "L": {1: 1.0, 2: 0.4, 3: 0.0},
 }
 
-WARM_BRANCH_MAP = {
+WARM_PERSONAL_COLOR_BRANCH_MAP = {
     "A": "spring_light",
     "B": "spring_bright",
     "C": "autumn_muted",
     "D": "autumn_deep",
 }
 
-COOL_BRANCH_MAP = {
+COOL_PERSONAL_COLOR_BRANCH_MAP = {
     "A": "summer_light",
     "B": "summer_muted",
     "C": "winter_bright",
     "D": "winter_deep",
 }
 
-MOCK_ITEMS = [
+MOCK_DATASET_ITEMS = [
     {
         "item_id": "mock_001",
         "image_path": "mock://lookbook/winter_minimal_01.jpg",

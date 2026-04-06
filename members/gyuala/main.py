@@ -8,17 +8,17 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from fashion_config import DATASET_STYLE_DISPLAY, DATASET_STYLE_TO_GROUP, STYLE_DISPLAY, TPO_DEEPLINK_KEYWORD
-from item_feature_builder import build_item_feature_list, ensure_dataset_extracted
+from fashion_config import DATASET_STYLE_GROUP_LABELS, DATASET_STYLE_LABELS, STYLE_LABELS, TPO_OPTION_TO_DEEPLINK_KEYWORD
+from item_feature_builder import ensure_dataset_archive_extracted, load_dataset_item_records
 from recommender import (
-    collect_top_style_matches,
-    filter_items_by_gender,
-    filter_items_with_images,
-    find_top_style_match,
-    infer_style_profile_from_matches,
-    rank_items,
+    collect_top_similarity_matches,
+    derive_style_profile_from_similarity_matches,
+    filter_image_available_items,
+    filter_items_by_user_gender,
+    find_highest_similarity_item_match,
+    rank_recommendation_candidates,
 )
-from survey_parser import _build_style_search_keywords, build_user_profile
+from survey_parser import collect_style_search_keywords, create_survey_profile
 
 app = FastAPI(title="Fashion Recommendation API", version="0.1.0")
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -27,7 +27,7 @@ DEFAULT_DATASET_DIR = PROJECT_ROOT / "sample_data"
 app.mount("/sample-files", StaticFiles(directory=str(DEFAULT_DATASET_DIR), check_dir=False), name="sample-files")
 
 
-class SurveyRequest(BaseModel):
+class SurveyInputModel(BaseModel):
     gender: Optional[str] = "U"
     personal_color: Optional[str] = "unknown"
     Q1: Optional[str] = None
@@ -46,8 +46,8 @@ class SurveyRequest(BaseModel):
     Qstyle_9: Optional[str] = None
 
 
-class RecommendationRequest(BaseModel):
-    survey: SurveyRequest
+class RecommendationQueryRequest(BaseModel):
+    survey: SurveyInputModel
     top_n: int = Field(default=5, ge=1, le=20)
     zip_path: Optional[str] = None
     extract_dir: Optional[str] = None
@@ -56,11 +56,11 @@ class RecommendationRequest(BaseModel):
     prefer_extracted_dataset: bool = True
 
 
-class ProfileOnlyRequest(BaseModel):
-    survey: SurveyRequest
+class ProfileAnalysisRequest(BaseModel):
+    survey: SurveyInputModel
 
 
-def build_deeplink_context(user_profile: Dict[str, Any]) -> Dict[str, Any]:
+def create_deeplink_context(user_profile: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "gender": user_profile["gender"],
         "personal_color_code": user_profile["personal_color"],
@@ -72,38 +72,38 @@ def build_deeplink_context(user_profile: Dict[str, Any]) -> Dict[str, Any]:
         "secondary_style_codes": user_profile["secondary_styles"],
         "style_search_keywords": user_profile["style_search_keywords"],
         "fit_preference": user_profile["fit_preference"],
-        "tpo_keyword": TPO_DEEPLINK_KEYWORD.get(user_profile.get("tpo_preference", ""), ""),
+        "tpo_keyword": TPO_OPTION_TO_DEEPLINK_KEYWORD.get(user_profile.get("tpo_preference", ""), ""),
         "musinsa_search_keywords": user_profile["color_search_keywords"] + user_profile["style_search_keywords"],
         "zigzag_search_keywords": user_profile["color_search_keywords"] + user_profile["style_search_keywords"],
     }
 
 
-def build_profile_response(user_profile: Dict[str, Any]) -> Dict[str, Any]:
+def create_profile_response_payload(user_profile: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "user_profile": user_profile,
-        "deeplink_context": build_deeplink_context(user_profile),
+        "deeplink_context": create_deeplink_context(user_profile),
     }
 
 
-def build_preference_analysis_text(top_match: Dict[str, Any]) -> str:
-    era = str(top_match.get("era", "unknown"))
-    style = format_dataset_style_group(str(top_match.get("style", "unknown")))
+def format_preference_analysis_text(top_match: Dict[str, Any]) -> str:
+    matched_era = str(top_match.get("era", "unknown"))
+    matched_style_group = resolve_dataset_style_group_label(str(top_match.get("style", "unknown")))
     similarity_percent = int(top_match.get("similarity_percent", 0))
-    return f"알고리즘 분석 결과, 당신의 취향은 **[{era}년대]**의 **[{style}]**과 {similarity_percent}% 일치합니다"
+    return f"알고리즘 분석 결과, 당신의 취향은 **[{matched_era}년대]**의 **[{matched_style_group}]**과 {similarity_percent}% 일치합니다"
 
 
-def format_dataset_style_label(style_code: str) -> str:
-    korean_label = DATASET_STYLE_DISPLAY.get(style_code.lower())
+def resolve_dataset_style_label(style_code: str) -> str:
+    korean_label = DATASET_STYLE_LABELS.get(style_code.lower())
     if not korean_label:
         return "기타 스타일"
     return korean_label
 
 
-def format_dataset_style_group(style_code: str) -> str:
-    return DATASET_STYLE_TO_GROUP.get(style_code.lower(), "기타 스타일")
+def resolve_dataset_style_group_label(style_code: str) -> str:
+    return DATASET_STYLE_GROUP_LABELS.get(style_code.lower(), "기타 스타일")
 
 
-def _resolve_data_paths(request: RecommendationRequest) -> tuple[Optional[str], Optional[str], Optional[str]]:
+def resolve_dataset_input_paths(request: RecommendationQueryRequest) -> tuple[Optional[str], Optional[str], Optional[str]]:
     zip_path = request.zip_path
     extract_dir = request.extract_dir
     dataset_dir = request.dataset_dir
@@ -118,7 +118,7 @@ def _resolve_data_paths(request: RecommendationRequest) -> tuple[Optional[str], 
     return zip_path, extract_dir, dataset_dir
 
 
-def _to_static_image_url(image_path: str, dataset_dir: Optional[str]) -> Optional[str]:
+def build_static_image_url(image_path: str, dataset_dir: Optional[str]) -> Optional[str]:
     if not image_path or not dataset_dir:
         return None
 
@@ -135,56 +135,56 @@ def _to_static_image_url(image_path: str, dataset_dir: Optional[str]) -> Optiona
     return f"/sample-files/{relative_path.as_posix()}"
 
 
-def _attach_image_urls(
+def attach_recommendation_image_urls(
     recommendations: List[Dict[str, Any]],
     dataset_dir: Optional[str],
     base_url: str,
 ) -> List[Dict[str, Any]]:
     for item in recommendations:
-        relative_url = _to_static_image_url(str(item.get("image_path", "")), dataset_dir)
+        relative_url = build_static_image_url(str(item.get("image_path", "")), dataset_dir)
         item["image_url"] = relative_url
         item["image_full_url"] = f"{base_url.rstrip('/')}{relative_url}" if relative_url else None
     return recommendations
 
 
-def _run_dataset_recommendation_flow(
-    request: RecommendationRequest,
+def generate_dataset_recommendation_response(
+    request: RecommendationQueryRequest,
     base_url: str,
 ) -> Dict[str, Any]:
-    user_profile = build_user_profile(request.survey.model_dump()).to_dict()
-    zip_path, extract_dir, dataset_dir = _resolve_data_paths(request)
+    user_profile = create_survey_profile(request.survey.model_dump()).to_dict()
+    zip_path, extract_dir, dataset_dir = resolve_dataset_input_paths(request)
 
     if request.prefer_extracted_dataset and zip_path and extract_dir:
-        extracted_path = ensure_dataset_extracted(zip_path, extract_dir)
+        extracted_path = ensure_dataset_archive_extracted(zip_path, extract_dir)
         dataset_dir = str(extracted_path)
 
-    items = build_item_feature_list(
+    dataset_items = load_dataset_item_records(
         zip_path=zip_path,
         extract_dir=extract_dir,
         dataset_dir=dataset_dir,
         allow_mock=request.allow_mock_data,
     )
-    gender_filtered_items = filter_items_by_gender(items, user_profile["gender"])
-    image_ready_items = filter_items_with_images(gender_filtered_items)
-    candidate_items = image_ready_items or gender_filtered_items or items
-    top_matches = collect_top_style_matches(user_profile, gender_filtered_items or items, top_k=20)
-    inferred_style_profile = infer_style_profile_from_matches(top_matches)
+    gender_filtered_items = filter_items_by_user_gender(dataset_items, user_profile["gender"])
+    image_ready_items = filter_image_available_items(gender_filtered_items)
+    candidate_items = image_ready_items or gender_filtered_items or dataset_items
+    top_similarity_matches = collect_top_similarity_matches(user_profile, gender_filtered_items or dataset_items, top_k=20)
+    inferred_style_profile = derive_style_profile_from_similarity_matches(top_similarity_matches)
     if inferred_style_profile.get("primary_style_code"):
         primary_style_code = inferred_style_profile["primary_style_code"]
         secondary_style_codes = inferred_style_profile["secondary_style_codes"]
         user_profile["primary_style"] = primary_style_code
         user_profile["secondary_styles"] = secondary_style_codes
-        user_profile["style_display"] = {primary_style_code: STYLE_DISPLAY.get(primary_style_code, primary_style_code)}
-        user_profile["style_search_keywords"] = _build_style_search_keywords(primary_style_code, secondary_style_codes)
+        user_profile["style_display"] = {primary_style_code: STYLE_LABELS.get(primary_style_code, primary_style_code)}
+        user_profile["style_search_keywords"] = collect_style_search_keywords(primary_style_code, secondary_style_codes)
 
-    top_match = find_top_style_match(user_profile, gender_filtered_items or items)
-    recommendations = _attach_image_urls(
-        rank_items(user_profile, candidate_items, top_n=request.top_n),
+    top_match = find_highest_similarity_item_match(user_profile, gender_filtered_items or dataset_items)
+    recommendations = attach_recommendation_image_urls(
+        rank_recommendation_candidates(user_profile, candidate_items, top_n=request.top_n),
         dataset_dir,
         base_url,
     )
 
-    response = build_profile_response(user_profile)
+    response = create_profile_response_payload(user_profile)
     response["recommendation_results"] = recommendations
     response["preference_analysis"] = {
         "era": top_match["era"],
@@ -194,10 +194,10 @@ def _run_dataset_recommendation_flow(
     }
     response["meta"] = {
         "includes_dataset_recommendations": True,
-        "item_count": len(items),
+        "item_count": len(dataset_items),
         "gender_filtered_item_count": len(gender_filtered_items),
         "image_ready_item_count": len(image_ready_items),
-        "mock_data_used": _is_mock_dataset(items),
+        "mock_data_used": _is_mock_recommendation_source(dataset_items),
         "resolved_zip_path": zip_path,
         "resolved_dataset_dir": dataset_dir or extract_dir,
         "sample_files_base_url": "/sample-files" if dataset_dir else None,
@@ -207,7 +207,7 @@ def _run_dataset_recommendation_flow(
     return response
 
 
-def _render_gallery_html(result: Dict[str, Any]) -> str:
+def render_recommendation_gallery_html(result: Dict[str, Any]) -> str:
     user_profile = result["user_profile"]
     cards: List[str] = []
     for index, item in enumerate(result.get("recommendation_results", []), start=1):
@@ -224,7 +224,7 @@ def _render_gallery_html(result: Dict[str, Any]) -> str:
               <div class="media">{image_tag}</div>
               <div class="body">
                 <h2>{item.get("item_id", "-")}</h2>
-                <p class="meta">gender: {item.get("gender", "-")} | era: {item.get("era", "-")} | style: {format_dataset_style_group(str(item.get("style", "-")))}</p>
+                <p class="meta">gender: {item.get("gender", "-")} | era: {item.get("era", "-")} | style: {resolve_dataset_style_group_label(str(item.get("style", "-")))}</p>
                 <p class="score">score: {item.get("score", "-")}</p>
                 <ul>{reason_html}</ul>
               </div>
@@ -339,7 +339,7 @@ def _render_gallery_html(result: Dict[str, Any]) -> str:
     """
 
 
-def _render_gallery_form_html() -> str:
+def render_gallery_demo_page_html() -> str:
     return """
     <!doctype html>
     <html lang="ko">
@@ -537,7 +537,7 @@ def _render_gallery_form_html() -> str:
     """
 
 
-def _render_home_html() -> str:
+def render_home_page_html() -> str:
     return """
     <!doctype html>
     <html lang="ko">
@@ -614,7 +614,7 @@ def _render_home_html() -> str:
 
 
 @app.post("/dataset/prepare")
-def prepare_dataset(
+def prepare_dataset_directory(
     zip_path: Optional[str] = None,
     extract_dir: Optional[str] = None,
 ) -> Dict[str, Any]:
@@ -625,7 +625,7 @@ def prepare_dataset(
         raise HTTPException(status_code=404, detail="Sample.zip not found")
 
     try:
-        extracted_path = ensure_dataset_extracted(resolved_zip_path, resolved_extract_dir)
+        extracted_path = ensure_dataset_archive_extracted(resolved_zip_path, resolved_extract_dir)
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
@@ -644,25 +644,25 @@ def prepare_dataset(
 
 
 @app.get("/health")
-def health_check() -> Dict[str, str]:
+def get_health_status() -> Dict[str, str]:
     return {"status": "ok"}
 
 
 @app.get("/", response_class=HTMLResponse)
-def home() -> HTMLResponse:
-    return HTMLResponse(content=_render_home_html())
+def render_home_page() -> HTMLResponse:
+    return HTMLResponse(content=render_home_page_html())
 
 
 @app.post("/profile")
-def get_profile(request: ProfileOnlyRequest) -> Dict[str, Any]:
+def analyze_profile(request: ProfileAnalysisRequest) -> Dict[str, Any]:
     try:
-        user_profile = build_user_profile(request.survey.model_dump()).to_dict()
+        user_profile = create_survey_profile(request.survey.model_dump()).to_dict()
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"unexpected error: {exc}") from exc
 
-    response = build_profile_response(user_profile)
+    response = create_profile_response_payload(user_profile)
     response["meta"] = {
         "includes_dataset_recommendations": False,
         "recommended_usage": "service-fast-path",
@@ -671,9 +671,9 @@ def get_profile(request: ProfileOnlyRequest) -> Dict[str, Any]:
 
 
 @app.post("/dataset-recommendations/gallery", response_class=HTMLResponse)
-def get_dataset_recommendations_gallery(request: RecommendationRequest, http_request: Request) -> HTMLResponse:
+def render_dataset_recommendation_gallery(request: RecommendationQueryRequest, http_request: Request) -> HTMLResponse:
     try:
-        result = _run_dataset_recommendation_flow(request, str(http_request.base_url))
+        result = generate_dataset_recommendation_response(request, str(http_request.base_url))
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValueError as exc:
@@ -681,18 +681,18 @@ def get_dataset_recommendations_gallery(request: RecommendationRequest, http_req
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"unexpected error: {exc}") from exc
 
-    return HTMLResponse(content=_render_gallery_html(result))
+    return HTMLResponse(content=render_recommendation_gallery_html(result))
 
 
 @app.get("/gallery-demo", response_class=HTMLResponse)
-def gallery_demo() -> HTMLResponse:
-    return HTMLResponse(content=_render_gallery_form_html())
+def render_gallery_demo_page() -> HTMLResponse:
+    return HTMLResponse(content=render_gallery_demo_page_html())
 
 
 @app.post("/recommendations")
-def recommend_items(request: RecommendationRequest) -> Dict[str, Any]:
+def get_recommendation_summary_text(request: RecommendationQueryRequest) -> Dict[str, Any]:
     try:
-        result = _run_dataset_recommendation_flow(request, "http://127.0.0.1:8000/")
+        result = generate_dataset_recommendation_response(request, "http://127.0.0.1:8000/")
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValueError as exc:
@@ -703,7 +703,7 @@ def recommend_items(request: RecommendationRequest) -> Dict[str, Any]:
     return {"text": result["preference_analysis"]["text"]}
 
 
-def _is_mock_dataset(items: List[Dict[str, Any]]) -> bool:
+def _is_mock_recommendation_source(items: List[Dict[str, Any]]) -> bool:
     return bool(items) and all(str(item.get("item_id", "")).startswith("mock_") for item in items)
 
 
