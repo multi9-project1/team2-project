@@ -1,132 +1,179 @@
 # 맵시TI : Fashion Recommendation Service
 
-사용자 설문 응답을 기반으로 스타일/핏/TPO 결과를 분석하고, 이에 맞는 상품을 추천한 뒤 무신사/지그재그 딥링크를 생성해 제공하는 추천 서비스입니다.
+사용자의 설문 응답을 바탕으로 개인의 취향과 스타일 성향을 분석하고, 이에 맞는 패션 아이템을 추천하는 웹 서비스입니다.  
+프론트엔드에서 수집한 설문 데이터를 FastAPI 백엔드로 전달하면, 백엔드에서 점수화 및 사용자 유형 분류를 수행한 뒤 추천 알고리즘을 통해 크롤링된 쇼핑몰 상품 중 가장 적합한 아이템을 반환합니다.
 
 ---
 
-## 1. 프로젝트 개요
+## 1. 프로젝트 소개
 
-본 프로젝트는 프론트엔드에서 사용자의 설문 응답을 수집하고, Python 백엔드 서버가 이를 분석하여 다음 결과를 반환하는 구조로 설계되었습니다.
+본 프로젝트는 사용자의 패션 취향, 선호 스타일, 구매 성향 등을 설문 형태로 수집하고, 이를 기반으로 개인화된 패션 상품 추천 결과를 제공하는 시스템입니다.
 
-- 설문 점수 계산
-- 스타일 / 핏 / TPO 결과 생성
-- 결과에 맞는 상품 추천
-- 무신사 / 지그재그 딥링크 생성
+서비스의 전체 흐름은 다음과 같습니다.
 
-프론트엔드는 최종 결과 JSON을 받아 사용자에게 시각적으로 렌더링합니다.
+1. 사용자가 웹 화면에서 설문을 작성합니다.
+2. 프론트엔드는 설문 응답 데이터를 FastAPI 백엔드로 전송합니다.
+3. 백엔드는 응답 데이터를 점수화하고 분석 가능한 형태로 변환합니다.
+4. K-Means 군집화 모델을 사용해 사용자 유형(Persona)을 분류합니다.
+5. 분류 결과와 상품 특징 데이터를 기반으로 추천 알고리즘을 수행합니다.
+6. 무신사, 지그재그 등에서 수집된 상품 데이터 중 최적의 추천 결과를 반환합니다.
+7. 프론트엔드는 추천 결과를 사용자에게 시각적으로 제공합니다.
 
----
-
-## 2. 시스템 흐름
-
-1. 사용자가 프론트엔드에서 설문 응답을 제출합니다.
-2. 프론트엔드는 설문 응답 데이터를 Python 서버로 전송합니다.
-3. Python 서버는 다음 작업을 수행합니다.
-   - 설문 점수 계산
-   - 스타일 / 핏 / TPO 결과 생성
-   - 결과 기반 추천 상품 추출
-   - 무신사 / 지그재그 딥링크 생성
-4. 프론트엔드는 결과 JSON을 받아 결과 화면을 렌더링합니다.
+이 프로젝트는 단순 인기 상품 추천이 아니라, **설문 기반 개인화 추천**에 초점을 둔 것이 특징입니다.
 
 ---
 
-## 3. 기술 스택
+## 2. 프로젝트 목적
+
+이 프로젝트의 주요 목적은 다음과 같습니다.
+
+- 사용자의 스타일 취향을 정형화된 설문 데이터로 수집
+- 설문 응답을 기반으로 사용자 유형을 분류
+- 군집화 모델과 추천 로직을 결합하여 개인화된 패션 아이템 제공
+- 크롤링된 실제 쇼핑몰 상품 데이터를 활용해 현실적인 추천 결과 제공
+- 프론트엔드와 백엔드를 분리해 유지보수성과 확장성 확보
+
+즉, 본 시스템은 사용자의 주관적인 패션 선호를 데이터 기반으로 해석하고, 이를 실제 쇼핑 가능한 상품 추천으로 연결하는 것을 목표로 합니다.
+
+---
+
+## 3. 주요 기능
+
+### 3.1 설문 기반 사용자 데이터 수집
+- 사용자 성향, 선호 스타일, 구매 기준 등에 대한 설문 진행
+- 입력된 응답 데이터를 JSON 형태로 백엔드에 전달
+- 프론트엔드에서 설문 응답 상태 관리 및 검증 수행
+
+### 3.2 설문 응답 점수화 및 전처리
+- 설문 응답을 추천 시스템이 처리할 수 있는 수치형 데이터로 변환
+- 점수화 로직을 통해 사용자 특징 벡터 생성
+- 모델 입력을 위한 표준화된 형태로 가공
+
+### 3.3 사용자 유형 분류
+- 학습된 K-Means 모델을 활용해 사용자 군집 분류
+- 유사한 취향의 사용자 그룹에 매핑
+- 군집 결과를 기반으로 추천 전략 차별화
+
+### 3.4 패션 상품 추천
+- 사용자 특징과 상품 특징 간의 적합도 계산
+- 추천 알고리즘을 통해 우선순위가 높은 상품 선별
+- 최종 추천 결과 생성 및 응답 스키마에 맞춰 반환
+
+### 3.5 외부 쇼핑몰 상품 데이터 활용
+- 무신사, 지그재그 등 주요 쇼핑몰의 상품 정보 크롤링
+- 상품명, 가격, 카테고리, 이미지, 링크 등의 정보 수집
+- 추천 엔진이 활용할 수 있도록 상품 특징 벡터 생성
+
+### 3.6 추천 결과 시각화
+- 사용자에게 추천 상품 목록 제공
+- 상품 이미지, 이름, 가격, 링크 등 표시
+- 결과 페이지에서 직관적인 UI로 추천 내용 확인 가능
+
+---
+
+## 4. 기술 스택
 
 ### Frontend
-- React
-- TypeScript
-- Vite
+- **HTML5**: 페이지 구조 설계
+- **CSS3**: 화면 스타일링
+- **JavaScript (Vanilla JS)**: 사용자 입력 처리, API 통신, 결과 렌더링
 
 ### Backend
-- FastAPI
-- Pydantic
-- Uvicorn
+- **Python**
+- **FastAPI**: REST API 서버 구축
+- **Pydantic**: 요청/응답 데이터 검증
+- **Uvicorn**: ASGI 서버 실행
 
-### Recommendation / Analysis
-- Python
-- Scikit-learn
-- K-Means
+### Recommendation
+- **Scikit-learn**
+- **K-Means Clustering**: 사용자 유형 분류
+- 추천 로직 기반 개인화 아이템 추천 알고리즘
 
-### Crawling
-- Selenium
-- Undetected-Chromedriver
+### Data Collection
+- **Python Crawling Module**
+- 쇼핑몰 상품 데이터 수집용 크롤러
+  - 무신사 크롤러
+  - 지그재그 크롤러
+
+### DevOps / Environment
+- **Docker Compose**: 프론트엔드/백엔드 통합 실행 환경 구성
+- **.env**: 환경변수 관리
 
 ---
 
-## 4. 폴더 구조
+## 5. 시스템 아키텍처
 
-```bash
-project-root/
-├── frontend/
-│   ├── public/
-│   └── src/
-│       ├── api/
-│       │   └── recommendationApi.ts
-│       ├── components/
-│       │   ├── survey/
-│       │   │   ├── SurveyForm.tsx
-│       │   │   └── QuestionCard.tsx
-│       │   └── result/
-│       │       ├── ResultSummary.tsx
-│       │       ├── ProductCard.tsx
-│       │       └── ProductList.tsx
-│       ├── pages/
-│       │   ├── HomePage.tsx
-│       │   ├── SurveyPage.tsx
-│       │   └── ResultPage.tsx
-│       ├── types/
-│       │   ├── survey.ts
-│       │   └── recommendation.ts
-│       ├── hooks/
-│       │   └── useRecommendation.ts
-│       ├── utils/
-│       │   └── format.ts
-│       ├── App.tsx
-│       └── main.tsx
+전체 시스템은 **프론트엔드와 백엔드가 분리된 구조**로 설계되어 있습니다.
+
+- **Frontend**
+  - 사용자와 직접 상호작용하는 화면 제공
+  - 설문 입력 및 추천 결과 표시
+  - 백엔드 API 호출 담당
+
+- **Backend**
+  - 설문 응답 처리
+  - 데이터 점수화 및 사용자 유형 분류
+  - 추천 로직 실행
+  - 상품 데이터 관리 및 응답 생성
+
+- **Model / Recommendation Layer**
+  - K-Means 모델을 활용한 사용자 군집화
+  - 사용자 특징 벡터와 상품 특징 벡터 기반 추천 수행
+
+- **Crawler Layer**
+  - 외부 쇼핑몰 데이터를 수집하여 추천 후보군 확보
+
+---
+
+## 6. 프로젝트 구조
+
+```text
+project-root/                              # 프로젝트 최상위 루트
+├── frontend/                              # 사용자 화면을 담당하는 프론트엔드
+│   ├── index.html                         # 메인 진입 페이지
+│   ├── survey.html                        # 사용자 설문 페이지
+│   ├── result.html                        # 추천 결과 페이지
+│   ├── css/
+│   │   └── style.css                      # 전체 공통 스타일 파일
+│   ├── js/
+│   │   ├── api.js                         # FastAPI 백엔드와 통신하는 API 호출 함수
+│   │   ├── survey.js                      # 설문 입력 처리 및 응답 데이터 관리
+│   │   ├── result.js                      # 추천 결과 화면 렌더링 로직
+│   │   └── utils.js                       # 공통 유틸 함수
+│   └── assets/
+│       └── images/                        # 이미지, 아이콘 등 정적 리소스
 │
-├── backend/
+├── backend/                               # FastAPI 기반 백엔드 서버
 │   ├── app/
-│   │   ├── main.py
-│   │   ├── api/
-│   │   │   ├── router.py
+│   │   ├── main.py                        # FastAPI 앱 실행 진입점
+│   │   ├── api
+│   │   │   ├── router.py                  # 전체 API 라우터 등록
 │   │   │   └── routes/
-│   │   │       └── recommendation.py
+│   │   │       └── recommendation.py      # 추천 결과 요청/응답 엔드포인트
 │   │   ├── schemas/
-│   │   │   ├── survey.py
-│   │   │   └── recommendation.py
+│   │   │   ├── survey.py                  # 설문 요청 데이터 검증용 Pydantic 스키마
+│   │   │   └── recommendation.py          # 추천 응답 데이터 스키마
 │   │   ├── services/
-│   │   │   ├── survey_service.py
-│   │   │   ├── scoring_service.py
-│   │   │   ├── persona_service.py
-│   │   │   ├── recommendation_service.py
-│   │   │   └── deeplink_service.py
+│   │   │   ├── scoring_service.py         # 설문 응답 점수화 처리
+│   │   │   ├── persona_service.py         # 사용자 유형 분류 로직
+│   │   │   └── recommendation_service.py  # 최종 추천 결과 생성 서비스
 │   │   ├── logic/
-│   │   │   ├── fashion_config.py
-│   │   │   ├── survey_parser.py
-│   │   │   ├── item_feature_builder.py
-│   │   │   └── recommender.py
+│   │   │   ├── survey_parser.py           # 설문 응답을 분석 가능한 형태로 변환
+│   │   │   ├── item_feature_builder.py    # 상품 특징 벡터 생성
+│   │   │   └── recommender.py             # 추천 알고리즘 핵심 로직
 │   │   ├── crawlers/
-│   │   │   ├── musinsa_crawler.py
-│   │   │   └── zigzag_crawler.py
+│   │   │   ├── musinsa_crawler.py         # 무신사 상품 정보 수집
+│   │   │   └── zigzag_crawler.py          # 지그재그 상품 정보 수집
 │   │   ├── models/
-│   │   │   └── kmeans_model.pkl
-│   │   ├── data/
-│   │   │   ├── raw/
-│   │   │   ├── processed/
-│   │   │   └── cache/
-│   │   ├── utils/
-│   │   │   ├── logger.py
-│   │   │   └── helpers.py
-│   │   └── tests/
-│   │       ├── test_api.py
-│   │       ├── test_scoring.py
-│   │       └── test_recommendation.py
-│   ├── requirements.txt
-│   └── .env.example
+│   │   │   └── kmeans_model.pkl           # 학습된 K-Means 모델 파일
+│   │   └── utils/
+│   │       └── helpers.py                 # 공통 보조 함수
+│   ├── requirements.txt                   # Python 패키지 의존성 목록
+│   └── .env.example                       # 환경변수 예시 파일
 │
 ├── docs/
-│   └── architecture.md
+│   └── architecture.md                    # 시스템 구조 및 설계 문서
 │
-├── .gitignore
-├── docker-compose.yml
-└── README.md
+├── .gitignore                             # Git 제외 파일 목록
+├── README.md                              # 프로젝트 소개 및 실행 방법
+└── docker-compose.yml                     # 필요 시 프론트/백엔드 통합 실행 설정
