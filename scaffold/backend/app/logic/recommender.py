@@ -3,17 +3,30 @@ from __future__ import annotations
 import math
 from typing import Any, Dict, List
 
-from app.logic.fashion_config import (
-    DATASET_STYLE_GROUP_LABELS,
-    FIT_PREFERENCE_TO_Q411_SCORE,
-    PERSONAL_COLOR_DATASET_TARGETS,
-    STYLE_CODE_ORDER,
-    STYLE_DATASET_FEATURE_MAP,
-    STYLE_GROUP_TO_STYLE_CODE,
-    STYLE_LABELS,
-    STYLE_RANKING_WEIGHT_MAP,
-    TPO_OPTION_TO_DATASET_Q3_VALUES,
-)
+try:
+    from app.logic.fashion_config import (
+        DATASET_STYLE_GROUP_LABELS,
+        FIT_PREFERENCE_TO_Q411_SCORE,
+        PERSONAL_COLOR_DATASET_TARGETS,
+        STYLE_CODE_ORDER,
+        STYLE_DATASET_FEATURE_MAP,
+        STYLE_GROUP_TO_STYLE_CODE,
+        STYLE_LABELS,
+        STYLE_RANKING_WEIGHT_MAP,
+        TPO_OPTION_TO_DATASET_Q3_VALUES,
+    )
+except ImportError:
+    from fashion_config import (
+        DATASET_STYLE_GROUP_LABELS,
+        FIT_PREFERENCE_TO_Q411_SCORE,
+        PERSONAL_COLOR_DATASET_TARGETS,
+        STYLE_CODE_ORDER,
+        STYLE_DATASET_FEATURE_MAP,
+        STYLE_GROUP_TO_STYLE_CODE,
+        STYLE_LABELS,
+        STYLE_RANKING_WEIGHT_MAP,
+        TPO_OPTION_TO_DATASET_Q3_VALUES,
+    )
 
 
 def calculate_style_match_score(
@@ -55,7 +68,7 @@ def calculate_color_match_score(item: Dict[str, Any], personal_color_code: str) 
 
     q412_match = 1.0 if int(item.get("Q412", 0) or 0) == target_color_values[0] else 0.0
     q413_match = 1.0 if int(item.get("Q413", 0) or 0) == target_color_values[1] else 0.0
-    q414_match = 1.0 if int(item.get("Q413", 0) or 0) == target_color_values[2] else 0.0
+    q414_match = 1.0 if int(item.get("Q414", 0) or 0) == target_color_values[2] else 0.0
     color_match_score = (0.4 * q412_match) + (0.3 * q413_match) + (0.3 * q414_match)
     return color_match_score, {
         "q412_match": q412_match,

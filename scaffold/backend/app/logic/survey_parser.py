@@ -3,18 +3,32 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, List
 
-from app.logic.fashion_config import (
-    COOL_PERSONAL_COLOR_BRANCH_MAP,
-    PERSONAL_COLOR_ALIASES,
-    PERSONAL_COLOR_KEYWORD_MAP,
-    PERSONAL_COLOR_LABELS,
-    PERSONAL_COLOR_REPRESENTATIVE_COLORS,
-    STYLE_CODE_ORDER,
-    STYLE_KEYWORD_MAP,
-    STYLE_LABELS,
-    STYLE_QUESTION_OPTION_STYLE_MAP,
-    WARM_PERSONAL_COLOR_BRANCH_MAP,
-)
+try:
+    from app.logic.fashion_config import (
+        COOL_PERSONAL_COLOR_BRANCH_MAP,
+        PERSONAL_COLOR_ALIASES,
+        PERSONAL_COLOR_KEYWORD_MAP,
+        PERSONAL_COLOR_LABELS,
+        PERSONAL_COLOR_REPRESENTATIVE_COLORS,
+        STYLE_CODE_ORDER,
+        STYLE_KEYWORD_MAP,
+        STYLE_LABELS,
+        STYLE_QUESTION_OPTION_STYLE_MAP,
+        WARM_PERSONAL_COLOR_BRANCH_MAP,
+    )
+except ImportError:
+    from fashion_config import (
+        COOL_PERSONAL_COLOR_BRANCH_MAP,
+        PERSONAL_COLOR_ALIASES,
+        PERSONAL_COLOR_KEYWORD_MAP,
+        PERSONAL_COLOR_LABELS,
+        PERSONAL_COLOR_REPRESENTATIVE_COLORS,
+        STYLE_CODE_ORDER,
+        STYLE_KEYWORD_MAP,
+        STYLE_LABELS,
+        STYLE_QUESTION_OPTION_STYLE_MAP,
+        WARM_PERSONAL_COLOR_BRANCH_MAP,
+    )
 
 
 @dataclass
