@@ -117,7 +117,9 @@ def get_driver():
     if global_driver is None:
         options = uc.ChromeOptions()
         options.add_argument('--disable-popup-blocking')
-        # options.add_argument('--headless') 
+        options.add_argument("--headless=new")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--window-size=1440,1200")
         
         global_driver = uc.Chrome(options=options, version_main=146)
     return global_driver
