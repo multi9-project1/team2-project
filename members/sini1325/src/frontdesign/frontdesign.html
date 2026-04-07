@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>맵시TI</title>
+<style>
+@font-face {
+  font-family: 'MonaKR';
+  src: url('./MonaS12TextKR.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'MonaKR';
+  src: url('./MonaS12-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'MonaEmoji';
+  src: url('./Mona12ColorEmoji.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body,
+body *{
+  font-family:'MonaKR','MonaEmoji','Apple Color Emoji','Segoe UI Emoji',sans-serif !important;
+}
+
+body{
+  background:#FFF4FB;
+  color:#1E1B3A;
+}
+
+.app{max-width:520px;margin:0 auto;padding:20px 16px 80px;}
+.screen{display:none;animation:fi 0.3s ease;}
+.screen.active{display:block;}
+@keyframes fi{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.pcard{background:#fff;border:3px solid #1E1B3A;border-radius:18px;box-shadow:6px 6px 0 #1E1B3A;padding:22px 18px;margin-bottom:16px;}
+.pbar-bg{background:#F0E4FF;border-radius:99px;height:12px;border:2px solid #1E1B3A;overflow:hidden;}
+.pbar-fill{height:100%;background:linear-gradient(90deg,#FF7BAC,#A78BFA);border-radius:99px;transition:width 0.4s;}
+.spinner{display:inline-grid;grid-template-columns:repeat(4,16px);grid-template-rows:repeat(4,16px);gap:4px;margin:28px auto;}
+.spinner span{display:block;width:16px;height:16px;border-radius:4px;animation:sp 1.2s infinite;}
+@keyframes sp{0%,100%{opacity:0.2;transform:scale(0.6);}50%{opacity:1;transform:scale(1);}}
+select{width:100%;padding:10px 14px;font-size:16px;background:#D8D0FF;color:#1E1B3A;border:2.5px solid #1E1B3A;border-radius:12px;box-shadow:3px 3px 0 #1E1B3A;cursor:pointer;appearance:none;-webkit-appearance:none;margin-bottom:10px;}
+select:focus{outline:none;}
+.tag{display:inline-block;padding:4px 12px;border-radius:99px;font-size:13px;border:2px solid #1E1B3A;margin:3px;}
+</style>
+</head>
+<body>
+
+<div style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:-1;background:#FFF4FB;
+  background-image:radial-gradient(circle,#FFCCE6 1.5px,transparent 1.5px),radial-gradient(circle,#DDD6FE 1.5px,transparent 1.5px);
+  background-size:28px 28px,56px 56px;background-position:0 0,14px 14px;opacity:0.5;"></div>
+
+<div class="app">
+
+<!-- ① 시작 -->
+<div class="screen active" id="s-intro">
+  <div style="text-align:center;padding:20px 0 6px;font-size:40px;color:#C94F80;text-shadow:3px 3px 0 #FFD93D,6px 6px 0 #DDD6FE;letter-spacing:3px;">맵시TI ✨</div>
+  <div style="text-align:center;font-size:16px;color:#7C6F9A;margin-bottom:20px;">나만의 패션 페르소나를 찾아봐!</div>
+  <div class="pcard" style="text-align:center;background:linear-gradient(135deg,#FFD6E8,#DDD6FE);">
+    <div style="font-size:60px;margin-bottom:10px;">👗</div>
+    <div style="font-size:18px;color:#1E1B3A;line-height:1.9;">성별 & 퍼스널컬러 분석 +<br>스타일 설문 9문항으로<br>나만의 패션 DNA 발견!</div>
+  </div>
+  <div class="pcard" style="background:#FFF8E1;">
+    <div style="font-size:16px;color:#1E1B3A;line-height:2.2;">🎯 10가지 스타일 페르소나 분석<br>🛍️ 무신사 & 지그재그 스타일 검색 링크<br>🎨 퍼스널컬러 맞춤 컬러 가이드<br>📸 결과 카드 SNS 공유 가능</div>
+  </div>
+  <button onclick="goTo('s-gender')" style="display:block;width:100%;padding:18px;font-size:23px;background:#FF7BAC;color:#fff;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;">시작하기 💫</button>
+</div>
+
+<!-- ② 성별 -->
+<div class="screen" id="s-gender">
+  <div style="text-align:center;padding:14px 0 4px;font-size:28px;color:#C94F80;text-shadow:3px 3px 0 #FFD93D,5px 5px 0 #DDD6FE;">맵시TI ✨</div>
+  <div class="pcard">
+    <div style="font-size:23px;color:#1E1B3A;text-align:center;margin-bottom:10px;">나는 어떤 스타일러?</div>
+    <div style="font-size:15px;color:#7C6F9A;text-align:center;margin-bottom:20px;line-height:1.7;">성별을 선택해줘!<br>결과 캐릭터가 달라져 🎭</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+      <div id="gc-W" onclick="selectGender('W')" style="background:#D8D0FF;border:3px solid #1E1B3A;border-radius:18px;box-shadow:5px 5px 0 #1E1B3A;padding:28px 12px;text-align:center;cursor:pointer;">
+        <img
+          src="./characters/female_select.png"
+          alt="여성 캐릭터"
+          style="width:72px;height:72px;display:block;margin:0 auto 8px;object-fit:contain;"
+        >
+        <div style="font-size:22px;color:#1E1B3A;">여성</div>
+        <div style="font-size:13px;color:#7C6F9A;margin-top:4px;">무신사 + 지그재그</div>
+      </div>
+      <div id="gc-M" onclick="selectGender('M')" style="background:#D8D0FF;border:3px solid #1E1B3A;border-radius:18px;box-shadow:5px 5px 0 #1E1B3A;padding:28px 12px;text-align:center;cursor:pointer;">
+        <img
+          src="./characters/male_select.png"
+          alt="남성 캐릭터"
+          style="width:72px;height:72px;display:block;margin:0 auto 8px;object-fit:contain;"
+        >
+        <div style="font-size:22px;color:#1E1B3A;">남성</div>
+        <div style="font-size:13px;color:#7C6F9A;margin-top:4px;">무신사</div>
+      </div>
+    </div>
+    <button onclick="nextFromGender()" style="display:block;width:100%;padding:15px;font-size:19px;background:#FFD93D;color:#1E1B3A;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;">다음으로 →</button>
+  </div>
+</div>
+
+<!-- ③ 퍼스널컬러 입구 -->
+<div class="screen" id="s-color">
+  <div class="pcard">
+    <div style="font-size:23px;color:#1E1B3A;text-align:center;margin-bottom:10px;">퍼스널컬러 알아? 🎨</div>
+    <div style="font-size:15px;color:#7C6F9A;text-align:center;margin-bottom:20px;line-height:1.7;">알고 있으면 바로 선택,<br>모르면 간이 진단으로 찾아줄게!</div>
+    <button onclick="goTo('s-color-select')" style="display:block;width:100%;padding:15px;font-size:19px;background:#FF7BAC;color:#fff;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;margin-bottom:12px;">알아! 바로 선택할게 💅</button>
+    <button onclick="startDiag()" style="display:block;width:100%;padding:15px;font-size:19px;background:#A78BFA;color:#fff;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;">모르겠어… 진단해줘 🔍</button>
+  </div>
+</div>
+
+<!-- ③-A 직접 선택 -->
+<div class="screen" id="s-color-select">
+  <div class="pcard">
+    <div style="font-size:23px;color:#1E1B3A;text-align:center;margin-bottom:16px;">퍼스널컬러 선택 🎨</div>
+    <div id="color-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;"></div>
+    <button onclick="nextFromColor()" style="display:block;width:100%;padding:15px;font-size:19px;background:#FFD93D;color:#1E1B3A;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;margin-top:16px;margin-bottom:12px;">선택 완료 →</button>
+    <button onclick="goTo('s-color')" style="display:block;width:100%;padding:15px;font-size:19px;background:#D8D0FF;color:#1E1B3A;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;">← 뒤로</button>
+  </div>
+</div>
+
+<!-- ③-B 간이 진단 Step 1 -->
+<div class="screen" id="s-diag-1">
+  <div class="pcard">
+    <div style="font-size:14px;color:#7C6F9A;margin-bottom:8px;">1단계 / 2단계</div>
+    <div style="font-size:21px;color:#1E1B3A;margin-bottom:6px;">내 피부 바탕색은? 🌈</div>
+    <div style="font-size:14px;color:#7C6F9A;margin-bottom:20px;">세 가지 질문으로 웜/쿨 바탕톤을 찾아볼게!</div>
+    <div id="diag1-content"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="goTo('s-color')" style="flex:1;padding:13px;font-size:16px;background:#D8D0FF;color:#1E1B3A;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;">← 뒤로</button>
+    </div>
+  </div>
+</div>
+
+<!-- ③-C 간이 진단 Step 2 -->
+<div class="screen" id="s-diag-2">
+  <div class="pcard">
+    <div style="font-size:14px;color:#7C6F9A;margin-bottom:8px;">2단계 / 2단계</div>
+    <div style="font-size:21px;color:#1E1B3A;margin-bottom:6px;">나에게 어울리는 색깔은? 🎨</div>
+    <div style="font-size:14px;color:#7C6F9A;margin-bottom:20px;">1단계 결과를 바탕으로 골라봐!</div>
+    <div id="diag2-content"></div>
+    <button onclick="goTo('s-diag-1')" style="display:block;width:100%;padding:13px;font-size:16px;background:#D8D0FF;color:#1E1B3A;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;margin-top:16px;">← 이전 단계로</button>
+  </div>
+</div>
+
+<!-- ④ 설문 -->
+<div class="screen" id="s-survey">
+  <div style="margin-bottom:18px;">
+    <div style="font-size:15px;color:#7C6F9A;margin-bottom:6px;display:flex;justify-content:space-between;">
+      <span id="q-prog-txt">Q1 / 9</span><span id="q-prog-pct">11%</span>
+    </div>
+    <div class="pbar-bg"><div class="pbar-fill" id="pbar" style="width:11%"></div></div>
+  </div>
+  <div class="pcard">
+    <div id="q-num" style="font-size:14px;color:#7C6F9A;margin-bottom:4px;">Q1</div>
+    <div id="q-text" style="font-size:20px;color:#1E1B3A;margin-bottom:18px;line-height:1.5;"></div>
+    <div id="q-options" style="display:flex;flex-direction:column;gap:10px;"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="surveyPrev()" style="flex:1;padding:13px;font-size:16px;background:#D8D0FF;color:#1E1B3A;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;">← 이전</button>
+      <button onclick="surveyNext()" id="survey-next" style="flex:1;padding:13px;font-size:16px;background:#FFD93D;color:#1E1B3A;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;">다음 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ⑤ 로딩 -->
+<div class="screen" id="s-loading">
+  <div style="text-align:center;padding:60px 20px 40px;">
+    <div style="font-size:26px;color:#1E1B3A;margin-bottom:10px;">맵시 분석 중... ✨</div>
+    <div class="spinner" id="spinner"></div>
+    <div id="loading-msg" style="font-size:16px;color:#7C6F9A;">퍼스널컬러 데이터 연산 중</div>
+    <div style="margin-top:20px;font-size:14px;color:#7C6F9A;">잠깐만 기다려줘!</div>
+  </div>
+</div>
+
+<!-- ⑥ 결과 -->
+<div class="screen" id="s-result">
+  <div style="text-align:center;margin-bottom:8px;">
+    <span id="result-badge" style="display:inline-block;background:#FF7BAC;color:#fff;border:2.5px solid #1E1B3A;border-radius:99px;padding:5px 18px;font-size:15px;box-shadow:3px 3px 0 #1E1B3A;">나의 맵시TI</span>
+  </div>
+
+  <div id="result-char" style="border:3px solid #1E1B3A;border-radius:22px;box-shadow:6px 6px 0 #1E1B3A;padding:26px 18px;text-align:center;margin-bottom:16px;">
+    <div id="char-img" style="width:190px;height:190px;margin:0 auto 14px;background:#fff;border:3px solid #1E1B3A;border-radius:16px;display:flex;align-items:center;justify-content:center;overflow:hidden;"></div>
+    <div id="result-title" style="font-size:28px;color:#1E1B3A;margin-bottom:4px;"></div>
+    <div id="result-sub" style="font-size:17px;color:#7C6F9A;margin-bottom:14px;"></div>
+  </div>
+
+  <div id="result-desc-card" class="pcard">
+    <div id="result-desc"></div>
+    <div id="result-items"></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+    <div id="style-tip-card" class="pcard" style="margin-bottom:0;">
+      <div style="font-size:15px;font-weight:700;color:#1E1B3A;margin-bottom:8px;">💡 스타일 팁</div>
+      <div id="style-tip-text" style="font-size:14px;color:#1E1B3A;line-height:1.6;font-family:'Noto Sans KR',sans-serif;"></div>
+    </div>
+    <div id="point-color-card" class="pcard" style="margin-bottom:0;">
+      <div style="font-size:15px;font-weight:700;color:#1E1B3A;margin-bottom:8px;">🎨 포인트 컬러</div>
+      <div id="point-color-tags"></div>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div style="font-size:20px;color:#1E1B3A;margin-bottom:14px;font-weight:700;">🛒 쇼핑 큐레이션</div>
+    <div id="cat-tabs" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+      <div>
+        <div style="font-size:13px;color:#7C6F9A;margin-bottom:4px;">핏 선택</div>
+        <select id="fit-select"></select>
+      </div>
+      <div>
+        <div style="font-size:13px;color:#7C6F9A;margin-bottom:4px;">컬러 선택</div>
+        <select id="color-select"></select>
+      </div>
+    </div>
+    <button onclick="loadProducts()" id="preview-btn" style="display:block;width:100%;padding:14px;font-size:17px;background:#5ECFA8;color:#fff;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;margin-bottom:16px;">⚡ 맞춤 상품 보기</button>
+    <div id="product-results"></div>
+    <div id="shop-links" style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;"></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;">
+    <button onclick="shareResult()" style="padding:15px;font-size:17px;background:#FF7BAC;color:#fff;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;">📸 결과 공유</button>
+    <button onclick="resetAll()" style="padding:15px;font-size:17px;background:#1E1B3A;color:#fff;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #A78BFA;cursor:pointer;">🔄 다시하기</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ── 상태 ──────────────────────────────────────
+const ST = {
+  gender: null,
+  personalColor: null,
+  diagWarmCool: [],
+  diagStep: 1,
+  surveyAnswers: {},
+  currentQ: 0,
+  result: null,
+  selectedCat: '상의',
+  fitOptions: [],
+  colorOptions: []
+};
+
+// ── 퍼스널컬러 데이터 ──────────────────────────
+const COLORS = [
+  {key:'봄 라이트', dot:'#FFE8C4', bg:'#FFFDE7', season:'봄', desc:'밝고 연한 파스텔. 산뜻한 이미지.'},
+  {key:'봄 브라이트', dot:'#FFB347', bg:'#FFE0B2', season:'봄', desc:'선명하고 생기 있는 비비드한 톤.'},
+  {key:'봄 웜', dot:'#FFCC88', bg:'#FFF3E0', season:'봄', desc:'따뜻한 복숭아 베이스. 건강한 피부톤.'},
+  {key:'여름 라이트', dot:'#B8D8F8', bg:'#E3F2FD', season:'여름', desc:'연하고 차가운 파스텔. 청순한 이미지.'},
+  {key:'여름 뮤트', dot:'#8BAABF', bg:'#BBDEFB', season:'여름', desc:'차분하고 오묘한 회색빛 쿨 계열.'},
+  {key:'여름 쿨', dot:'#6699CC', bg:'#C5CAE9', season:'여름', desc:'밝고 선명한 쿨 계열. 생동감 있는 쿨톤.'},
+  {key:'가을 뮤트', dot:'#C8A878', bg:'#FFE0B2', season:'가을', desc:'채도 낮은 카키와 올리브. 내추럴 스타일.'},
+  {key:'가을 딥', dot:'#8B5E3C', bg:'#EFEBE9', season:'가을', desc:'깊고 진한 버건디와 브라운. 성숙한 이미지.'},
+  {key:'가을 웜', dot:'#CC8844', bg:'#FFF3E0', season:'가을', desc:'클래식하고 따뜻한 어스톤 분위기.'},
+  {key:'겨울 브라이트', dot:'#CC3355', bg:'#FCE4EC', season:'겨울', desc:'선명하고 청량한 아이시 컬러. 강렬한 인상.'},
+  {key:'겨울 딥', dot:'#334466', bg:'#D1C4E9', season:'겨울', desc:'짙은 네이비와 블랙. 카리스마 스타일.'},
+  {key:'겨울 쿨', dot:'#6688AA', bg:'#C5CAE9', season:'겨울', desc:'차가운 핑크와 라일락. 모던한 쿨톤.'}
+];
+
+// ── 퍼스널컬러별 추천 컬러 가이드 ──────────────
+const COLOR_GUIDE = {
+  '봄 라이트': {ms:['화이트','아이보리','라이트핑크','피치','코럴','옐로우'], zz:['화이트','아이보리','라이트핑크','피치']},
+  '봄 브라이트': {ms:['핑크','오렌지','레드','민트','그린','옐로우'], zz:['핑크','오렌지','레드','민트']},
+  '봄 웜': {ms:['아이보리','베이지','오렌지','머스타드','샌드'], zz:['아이보리','베이지','브라운','오렌지']},
+  '여름 라이트': {ms:['화이트','라이트핑크','스카이블루','라벤더'], zz:['화이트','라이트핑크','라이트블루','퍼플']},
+  '여름 뮤트': {ms:['그레이','라이트그레이','다크그레이','블루'], zz:['그레이','챠콜','로즈','모브','블루']},
+  '여름 쿨': {ms:['화이트','블루','네이비','실버'], zz:['화이트','블루','네이비','실버']},
+  '가을 뮤트': {ms:['베이지','다크베이지','카키','오트밀'], zz:['베이지','카키','민트','브라운']},
+  '가을 딥': {ms:['다크브라운','딥레드','버건디','진청'], zz:['브라운','버건디','챠콜']},
+  '가을 웜': {ms:['카멜','머스타드','다크오렌지','브라운'], zz:['오렌지','브라운','카키','골드']},
+  '겨울 브라이트': {ms:['블랙','화이트','레드','블루','퍼플'], zz:['블랙','화이트','레드','블루','퍼플']},
+  '겨울 딥': {ms:['블랙','다크네이비','다크그린','버건디'], zz:['블랙','네이비','버건디','챠콜']},
+  '겨울 쿨': {ms:['화이트','네이비','실버','데님'], zz:['화이트','네이비','실버']}
+};
+
+const SEASON_RESULT_TEXT = {
+  '봄 라이트': '봄(Spring): 햇살처럼 따뜻하고 활기찬 느낌이에요!',
+  '봄 브라이트': '봄(Spring): 햇살처럼 따뜻하고 활기찬 느낌이에요!',
+  '봄 웜': '봄(Spring): 햇살처럼 따뜻하고 활기찬 느낌이에요!',
+  '여름 라이트': '여름(Summer): 시원한 바람처럼 깨끗하고 부드러운 느낌이에요!',
+  '여름 뮤트': '여름(Summer): 시원한 바람처럼 깨끗하고 부드러운 느낌이에요!',
+  '여름 쿨': '여름(Summer): 시원한 바람처럼 깨끗하고 부드러운 느낌이에요!',
+  '가을 뮤트': '가을(Autumn): 분위기 있는 가을 산처럼 멋지고 우아한 느낌이에요!',
+  '가을 딥': '가을(Autumn): 분위기 있는 가을 산처럼 멋지고 우아한 느낌이에요!',
+  '가을 웜': '가을(Autumn): 분위기 있는 가을 산처럼 멋지고 우아한 느낌이에요!',
+  '겨울 브라이트': '겨울(Winter): 눈 내리는 날처럼 아주 선명하고 세련된 느낌이에요!',
+  '겨울 딥': '겨울(Winter): 눈 내리는 날처럼 아주 선명하고 세련된 느낌이에요!',
+  '겨울 쿨': '겨울(Winter): 눈 내리는 날처럼 아주 선명하고 세련된 느낌이에요!'
+};
+
+// ── 카테고리 & 핏 데이터 ──────────────────────
+const CAT_FITS = {
+  '상의': ['슬림핏','루즈핏','오버핏','크롭핏','박시핏','레귤러핏'],
+  '아우터': ['오버핏','루즈핏','슬림핏','크롭핏','롱라인','벨티드'],
+  '팬츠': ['와이드핏','슬림핏','스트레이트핏','부츠컷','조거핏','테이퍼드핏','하이웨스트'],
+  '원피스': ['A라인','H라인','플레어','머메이드','슬림핏','루즈핏','랩핏','셔츠핏'],
+  '니트/카디건': ['루즈핏','슬림핏','오버핏','크롭핏','레귤러핏'],
+  '스커트': ['A라인','H라인','플레어','머메이드','타이트핏','랩핏','플리츠'],
+  '트레이닝': ['루즈핏','오버핏','조거핏','세미슬림']
+};
+
+const STYLE_FIT_MAP = {
+  '소피스티케이티드': ['슬림핏','레귤러핏','H라인'],
+  '페미닌': ['슬림핏','A라인','랩핏','플레어'],
+  '힙스터/펑크': ['오버핏','타이트핏','크롭핏','와이드핏'],
+  '캐주얼': ['레귤러핏','스트레이트핏','세미슬림'],
+  '모던/미니멀': ['레귤러핏','슬림핏','스트레이트핏'],
+  '로맨틱': ['A라인','플레어','크롭핏'],
+  '매니시': ['레귤러핏','루즈핏','스트레이트핏'],
+  '스트리트': ['오버핏','루즈핏','박시핏','와이드핏'],
+  '스포티': ['조거핏','루즈핏','트레이닝핏'],
+  '레트로/빈티지': ['부츠컷','테이퍼드핏','롱라인']
+};
+
+// ── 설문 문항 ─────────────────────────────────
+const SQ = [
+  {text:'Q1. 새로운 사람들을 만나는 날, 거울 앞의 나는 어떤 분위기일까?',opts:[
+    {key:'A',text:'깔끔하고 단정하게! 은근히 지적이면서도 세련된 인상을 주고 싶어 ✨',sc:['소피스티케이티드','모던/미니멀','매니시']},
+    {key:'B',text:'부드럽고 편안하게! 금방 친해지고 싶은 사람처럼 보이고 싶어 ✌️',sc:['캐주얼','로맨틱','페미닌']}]},
+
+  {text:'Q2. 옷장에 입을 옷이 없어!! 온라인 쇼핑 중 더 눈길이 가는 옷은?',opts:[
+    {key:'A',text:'오래 입을 수 있는 기본템, 군더더기 없는 실루엣, 담백한 색감',sc:['모던/미니멀','캐주얼','소피스티케이티드']},
+    {key:'B',text:'한눈에 포인트가 보이는 아이템, 독특한 디테일, 눈에 띄는 분위기',sc:['스트리트','힙스터/펑크','레트로/빈티지']}]},
+
+  {text:'Q3. 밥 먹고 배가 살짝 부른 상태! 지금 내 옷의 핏(fit)은?',opts:[
+    {key:'A',text:'"핏이 무너지면 안 되지!" 후기를 꼼꼼히 읽어보고 내 체형에 딱 맞는 정사이즈를 고른다 📏',sc:[]},
+    {key:'B',text:'"작은 것보단 큰 게 낫지!" 고민할 바엔 그냥 한 사이즈 크게 사서 넉넉하게 입는다 👕',sc:[]}]},
+
+  {text:'Q4. 기다리고 기다리던 주말!! 가장 기분 좋은 주말 외출은?',opts:[
+    {key:'A',text:'예쁜 카페에서 조용히 커피 마시거나, 핫플에서 예쁜 사진 남기는 코스 📸',sc:['페미닌','로맨틱','레트로/빈티지']},
+    {key:'B',text:'산책, 피크닉, 게임, 여기저기 뽈뽈거리며 돌아다니는 활동적인 코스',sc:['스포티','스트리트','캐주얼']}]},
+
+  {text:'Q5. 더 이상 집에만 있을 순 없어! 오랜만의 문화생활~! 내가 더 끌리는 영화 포스터는?',opts:[
+    {key:'A',text:'차갑고 도시적인 장면, 절제된 톤, 시크한 주인공 등장! 🌃',sc:['매니시','모던/미니멀','스트리트']},
+    {key:'B',text:'빈티지한 햇살, 감성적인 장면, 몽글몽글한 로맨스 무드 ❤️',sc:['로맨틱','레트로/빈티지','페미닌']}]},
+
+  {text:'Q6. 오랜만의 외출인데 대충 입을 순 없지! 내가 옷에서 좋아하는 포인트는?',opts:[
+    {key:'A',text:'"돌려 입기 최고!" 로고나 패턴 없이 심플하고 색감이 깔끔한 기본템들 🤍',sc:['소피스티케이티드','매니시','모던/미니멀']},
+    {key:'B',text:'"이건 사야 해!" 흔하지 않은 디자인, 톡톡 튀는 컬러나 유니크한 포인트템들 💖',sc:['힙스터/펑크','스트리트','스포티']}]},
+
+  {text:'Q7. 자주 손이 가는 옷을 사고 싶어! 내가 더 편하게 느끼는 코디 방식은?',opts:[
+    {key:'A',text:'힘 빼고 자연스럽지만, 보기엔 센스 있는 꾸안꾸 스타일',sc:['캐주얼','스포티','힙스터/펑크']},
+    {key:'B',text:'무드가 분명하고, 분위기 자체가 예쁘게 완성되는 스타일',sc:['페미닌','로맨틱','소피스티케이티드']}]},
+
+  {text:'Q8. 나 New 옷 샀어~! 남들이 내 옷을 보고 해줬으면 하는 말은?',opts:[
+    {key:'A',text:'“와, 되게 멋있다. 자기 스타일 확실하다.”',sc:['매니시','힙스터/펑크','스트리트']},
+    {key:'B',text:'“와, 분위기 있다. 되게 센스 있고 예쁘다.”',sc:['모던/미니멀','레트로/빈티지','스포티']}]},
+
+  {text:'Q9. 오늘 중요한 약속이 있다! 옷을 고를 때 내가 가장 먼저 떠올리는 생각은?',opts:[
+    {key:'A',text:'“오늘 일정에 맞게 단정하고 무난하게 입어야지!” 출근, 학교, 평소 외출처럼 어디서든 자연스럽게 어울리는 스타일',sc:['소피스티케이티드','모던/미니멀']},
+    {key:'B',text:'“사람들 만나는 자리니까 예쁘고 호감 가게 입고 싶어!” 소개팅, 친구 약속, 사교 모임처럼 인상이 중요한 자리',sc:['페미닌','로맨틱']},
+    {key:'C',text:'“격식 있는 자리니까 신경 써서 갖춰 입어야 해!” 결혼식, 행사, 중요한 모임처럼 포멀함이 필요한 상황',sc:['소피스티케이티드','매니시']},
+    {key:'D',text:'“오래 돌아다닐 거니까 편하고 활동성 있게 입자!” 여행, 야외 활동, 운동처럼 움직임이 많은 하루',sc:['스포티','캐주얼']}]}
+];
+
+// ── 페르소나 데이터 ───────────────────────────
+const PERSONAS = {
+  '소피스티케이티드':{icon:'💻',tF:'갓생 사는 도심 속 차도녀',tM:'갓생 사는 도심 속 차도남',q:'"8시 55분, 아아 한 잔과 함께 업무 모드 ON!"',d:'아침 이슬 머금은 셔츠처럼 언제나 흐트러짐 없는 당신! 복잡한 도심 속에서도 나만의 칼각과 리듬을 지키는 프로페셔널한 타입이에요.',items:['잘 다려진 셔츠','핏이 딱 떨어지는 슬랙스','툭 걸쳐도 멋진 블레이저 🧥'],pt:'단정하고 정돈된 느낌이 당신의 지적인 분위기를 200% 살려줄 거예요! ✨',tip:'블레이저와 슬랙스 조합으로 갓생 오피스룩을 완성해봐. 발색 좋은 단색 아이템 위주로 레이어드하면 더욱 세련돼 보여!',eF:'👩‍💼',eM:'👨‍💼',bg:'#EEF2FF'},
+  '페미닌':{icon:'🌸',tF:'호수 위의 백조, 우아함 한 스푼 여신',tM:'호수 위의 백조, 우아함 한 스푼',q:'"은은하게 퍼지는 샴푸 향기처럼 몽글몽글하게"',d:'화사하게 피어난 꽃처럼 언제나 부드럽고 우아한 선을 사랑하는 당신!',items:['라인을 살려주는 원피스','하늘하늘한 블라우스','페미닌한 무드의 스커트 🦢'],pt:'부드럽고 여성스러운 디테일이 당신의 우아한 이미지를 더욱 빛나게 해줄 거예요! ✨',tip:'플로럴 패턴이나 레이스 디테일로 포인트를 주면 더욱 화사해져. 드레이프가 자연스럽게 흐르는 소재를 선택해봐!',eF:'🧝‍♀️',eM:'🧝',bg:'#FFF0F5'},
+  '힙스터/펑크':{icon:'🎸',tF:'톡톡 튀는 인간 팝핑캔디',tM:'톡톡 튀는 인간 팝핑캔디',q:'"톡 쏘는 탄산처럼 강렬한 존재감"',d:'평범한 건 거부한다! 독특하고 화려한 스타일로 자신을 표현할 줄 아는 용감한 타입.',items:['화려한 패턴의 상의','독특한 워싱의 데님','시선 강탈 포인트 액세서리 💖'],pt:'화려하고 독특한 개성이 당신의 힙한 감성을 200% 완성해 줄 거예요! 😎',tip:'믹스앤매치가 포인트! 서로 다른 패턴끼리 과감하게 레이어드하고, 빈티지 액세서리로 개성을 살려봐.',eF:'🧑‍🎤',eM:'🧑‍🎤',bg:'#FFF8E1'},
+  '캐주얼':{icon:'🎒',tF:'어디서나 찰떡! 호불호 제로 카멜레온',tM:'어디서나 찰떡! 호불호 제로 카멜레온',q:'"무심한 듯 툭 걸친 티셔츠 한 장으로 완벽한 밸런스"',d:'어떤 모임에 가도 편안하게 스며드는 친근한 매력! 실용적이면서도 깔끔한 꾸안꾸 정석.',items:['편안한 맨투맨','활동성 좋은 데님 팬츠','가벼운 캔버스화 👟'],pt:'실용적이고 깔끔한 느낌이 당신의 맑고 깨끗한 분위기를 200% 살려줄 거예요! ✨',tip:'기본 아이템 퀄리티에 투자해봐. 좋은 소재의 화이트 티셔츠 하나로도 완성도 높은 꾸안꾸 연출이 가능해!',eF:'🧑',eM:'🧑',bg:'#F0FFF4'},
+  '모던/미니멀':{icon:'🧊',tF:'군더더기 제로, 시크한 얼음물 한 잔',tM:'군더더기 제로, 시크한 얼음물 한 잔',q:'"비움의 미학을 아는 차분한 아우라"',d:'복잡한 건 딱 질색! 깔끔한 선과 무채색의 조화로운 무드를 즐기는 냉철한 감각가.',items:['무채색 코트나 재킷','로고 없는 니트','딱 떨어지는 슬랙스 🧥'],pt:'깔끔하고 무난한 핏이 오히려 당신의 감각적인 카리스마를 더욱 돋보이게 해줄 거예요! 🧊',tip:'컬러 팔레트를 블랙-화이트-그레이 3색으로 제한해봐. 소재와 실루엣의 차이만으로도 풍성한 레이어드가 완성돼!',eF:'🧑‍💻',eM:'🧑‍💻',bg:'#F5F5F5'},
+  '로맨틱':{icon:'🎀',tF:'인간 벚꽃 솜사탕, 사랑스러움의 결정체',tM:'인간 벚꽃 솜사탕, 사랑스러움의 결정체',q:'"바라만 봐도 기분이 좋아지는 따뜻한 봄 햇살"',d:'포근하고 다정한 마음씨만큼이나 사랑스러운 스타일을 추구하는 로맨티스트!',items:['파스텔 톤 가디건','리본 디테일 블라우스','부드러운 니트 아이템 🌸'],pt:'부드럽고 발랄한 무드가 당신의 사랑스러운 매력을 200% 폭발시켜줄 거예요! 💖',tip:'리본이나 레이스 같은 여성스러운 디테일을 포인트로 활용해봐. 파스텔 컬러 코디에 골드 액세서리면 금상첨화!',eF:'🌸',eM:'🌸',bg:'#FFF0F5'},
+  '매니시':{icon:'🕴️',tF:'무심한 듯 툭, 시크한 선배미 뿜뿜',tM:'무심한 듯 툭, 시크한 선배미 뿜뿜',q:'"묵직한 울림, 중성적인 매력에 자꾸만 눈길이"',d:'도시적이고 멋진 이미지를 선호하며, 자신만의 뚜렷한 주관을 스타일로 표현할 줄 알아요.',items:['오버핏 자켓','와이드 슬랙스','클래식한 옥스포드화 👞'],pt:'도시적이면서도 멋있는 분위기가 당신의 쿨한 멋을 200% 완성해 줄 거예요! 😎',tip:'오버사이즈 남성복 아이템을 여성스러운 요소와 믹스해봐. 와이드 팬츠에 크롭 아이템 조합이 비율 맛집이야!',eF:'🧥',eM:'🧥',bg:'#F3F4F6'},
+  '스트리트':{icon:'🛹',tF:'뒷골목 런웨이, 자유로운 영혼의 지배자',tM:'뒷골목 런웨이, 자유로운 영혼의 지배자',q:'"정해진 틀을 깨부수는 거리의 주인공"',d:'어디로 튈지 모르는 자유로운 에너지와 트렌디한 감각이 공존하는 당신!',items:['편안한 후드티','넉넉한 카고 팬츠','트렌디한 조거 팬츠 🎧'],pt:'활동적이고 트렌디한 무드가 당신의 자유로운 영혼을 200% 보여줄 거예요! 🛹',tip:'그래픽 로고 아이템에 카고 팬츠 조합이 스트리트 핵심! 캡모자나 비니로 힙한 포인트를 더해봐.',eF:'🛹',eM:'🛹',bg:'#EFF6FF'},
+  '스포티':{icon:'🏃',tF:'에너지 1000%, 지치지 않는 인간 비타민',tM:'에너지 1000%, 지치지 않는 인간 비타민',q:'"존재만으로도 주변을 환하게 밝히는 에너자이저"',d:'건강한 에너지와 활동적인 스타일이 당신의 가장 큰 매력 포인트!',items:['아노락 자켓','레깅스나 트레이닝 셋업','야구 모자 🧢'],pt:'활동적이고 편안한 핏이 당신의 건강한 이미지를 200% 완성해 줄 거예요! ⚡',tip:'스포츠 브랜드 셋업에 슬리퍼나 샌들 조합이 요즘 트렌디한 스포티룩이야. 컬러블록으로 생동감을 더해봐!',eF:'🏃‍♀️',eM:'🏃',bg:'#ECFDF5'},
+  '레트로/빈티지':{icon:'📻',tF:'낭만 가득한 시간여행자',tM:'낭만 가득한 시간여행자',q:'"아날로그 필름 카메라 속에 담긴 따뜻한 기록"',d:'남들은 모르는 독특한 색감과 과거의 낭만을 찾아 여행하는 아날로그 감성가!',items:['체크무늬 셔츠','코듀로이 팬츠','빛바랜 그래픽 티셔츠 🎞️'],pt:'독특하고 트렌디한 빈티지 감성이 당신의 깊은 매력을 200% 담아내 줄 거예요! 📻',tip:'구제샵이나 빈티지샵에서 90-00년대 아이템을 발굴해봐. 부츠컷 데님과 빈티지 가죽 자켓 조합은 레트로룩의 기본!',eF:'📷',eM:'📷',bg:'#FDF6EC'}
+};
+
+const CHARACTER_ASSETS = {
+  '소피스티케이티드': {
+    W: { src: './characters/sophisticated_w.png', nickname: '도도', subtitle: '도도한 도시 여우' },
+    M: { src: './characters/sophisticated_m.png', nickname: '반듯', subtitle: '흐트러짐 없는 정석' }
+  },
+  '페미닌': {
+    W: { src: './characters/feminine_w.png', nickname: '나비', subtitle: '우아하게 날아드는' },
+    M: { src: './characters/feminine_m.png', nickname: '윤슬', subtitle: '반짝이는 부드러움' }
+  },
+  '힙스터/펑크': {
+    W: { src: './characters/hipster_punk_w.png', nickname: '톡톡', subtitle: '톡 쏘는 팝핑 캔디' },
+    M: { src: './characters/hipster_punk_m.png', nickname: '팝핑', subtitle: '터지는 탄산 에너지' }
+  },
+  '캐주얼': {
+    W: { src: './characters/casual_w.png', nickname: '단짝', subtitle: '언제나 편안한 친구' },
+    M: { src: './characters/casual_m.png', nickname: '푸근', subtitle: '포근하게 스며드는' }
+  },
+  '모던/미니멀': {
+    W: { src: './characters/modern_minimal_w.png', nickname: '정갈', subtitle: '군더더기 없는 맑음' },
+    M: { src: './characters/modern_minimal_m.png', nickname: '담백', subtitle: '깔끔함의 끝판왕' }
+  },
+  '로맨틱': {
+    W: { src: './characters/romantic_w.png', nickname: '솜사', subtitle: '사르르 녹는 솜사탕' },
+    M: { src: './characters/romantic_m.png', nickname: '달콤', subtitle: '눈에서 꿀 떨어지는' }
+  },
+  '매니시': {
+    W: { src: './characters/mannish_w.png', nickname: '멋쁨', subtitle: '멋지고 예쁜 선배' },
+    M: { src: './characters/mannish_m.png', nickname: '무심', subtitle: '시크한 츤데레 매력' }
+  },
+  '스트리트': {
+    W: { src: './characters/street_w.png', nickname: '보더', subtitle: '자유로운 보더 느낌' },
+    M: { src: './characters/street_m.png', nickname: '스웩', subtitle: '태생부터 힙한 아우라' }
+  },
+  '스포티': {
+    W: { src: './characters/sporty_w.png', nickname: '생생', subtitle: '생기 넘치는 비타민' },
+    M: { src: './characters/sporty_m.png', nickname: '비타', subtitle: '지치지 않는 갓생러' }
+  },
+  '레트로/빈티지': {
+    W: { src: './characters/retro_w.png', nickname: '필름', subtitle: '기억하고 싶은 감성' },
+    M: { src: './characters/retro_m.png', nickname: '낭만', subtitle: '아날로그 감성 장인' }
+  }
+};
+
+
+// ── 간이진단 데이터 ───────────────────────────
+const DIAG_Q1 = [
+  {text:'손목 안쪽을 봤을 때, 혈관이 어떤 색으로 보이나요?',opts:[
+    {key:'W',label:'A. 초록색이나 올리브색처럼 보여요.',desc:'웜'},
+    {key:'C',label:'B. 파란색이나 보라색처럼 보여요.',desc:'쿨'}]},
+
+  {text:'햇볕 아래에서 오랫동안 놀고 나면 피부가 어떻게 되나요?',opts:[
+    {key:'W',label:'A. 피부색이 어둡게(갈색으로) 타는 편이에요.',desc:'웜'},
+    {key:'C',label:'B. 피부가 빨갛게 익었다가 금방 원래대로 돌아와요.',desc:'쿨'}]},
+
+  {text:'밝은 곳에서 거울로 눈동자(홍채)를 관찰했을 때, 바탕색은 어느 쪽에 가깝나요?',opts:[
+    {key:'W',label:'A. 노란빛이나 옅은 붉은빛이 도는 밝은 갈색(호박색)에 가까운 편이에요.',desc:'웜'},
+    {key:'C',label:'B. 노란기가 배제된 짙은 고동색, 회갈색, 또는 완전한 흑색에 가까운 편이에요.',desc:'쿨'}]}
+];
+
+const DIAG_WARM_OPTS = [
+  {key:'봄 라이트', desc:'노란색 개나리처럼 밝고 화사한 색'},
+  {key:'봄 브라이트', desc:'새콤달콤한 귤처럼 쨍하고 생생한 색'},
+  {key:'봄 웜', desc:'따뜻한 복숭아빛처럼 부드럽고 생기 있는 색'},
+  {key:'가을 뮤트', desc:'부드러운 모래나 나무처럼 차분하고 편안한 색'},
+  {key:'가을 딥', desc:'이나 단풍잎처럼 깊고 어두운 색'},
+  {key:'가을 웜', desc:'카멜이나 머스타드처럼 따뜻하고 성숙한 색'}
+];
+
+const DIAG_COOL_OPTS = [
+  {key:'여름 라이트', desc:'시원한 딸기 우유처럼 맑고 연한 색'},
+  {key:'여름 뮤트', desc:'구름 낀 하늘처럼 은은하고 회색빛이 섞인 색'},
+  {key:'여름 쿨', desc:'청명한 하늘빛처럼 시원하고 또렷한 색'},
+  {key:'겨울 브라이트', desc:'형광펜처럼 눈에 확 띄고 아주 진한 색'},
+  {key:'겨울 딥', desc:'캄캄한 밤하늘처럼 아주 어둡고 묵직한 색'},
+  {key:'겨울 쿨', desc:'얼음처럼 차갑고 선명한 색'}
+];
+
+// ── 상태 변수 ─────────────────────────────────
+let diagQ1Step = 0;
+
+// ── 유틸 함수 ─────────────────────────────────
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function selectGender(g){
+  ST.gender=g;
+  ['W','M'].forEach(x=>{
+    const el=document.getElementById('gc-'+x);
+    el.style.background=x===g?'#FFD93D':'#D8D0FF';
+    el.style.borderColor=x===g?'#C94F80':'#1E1B3A';
+    el.style.boxShadow=x===g?'3px 3px 0 #C94F80':'5px 5px 0 #1E1B3A';
+  });
+}
+
+function nextFromGender(){
+  if(!ST.gender){alert('성별을 선택해주세요!');return;}
+  goTo('s-color');
+}
+
+function selectColor(k){
+  ST.personalColor=k;
+  document.querySelectorAll('[data-chip]').forEach(el=>{
+    const isMe=el.dataset.chip===k;
+    el.style.outline=isMe?'3px solid #C94F80':'none';
+    el.style.transform=isMe?'translate(3px,3px)':'none';
+    el.style.boxShadow=isMe?'0 0 0 #1E1B3A':'3px 3px 0 #1E1B3A';
+  });
+}
+
+function nextFromColor(){
+  if(!ST.personalColor){alert('퍼스널컬러를 선택해주세요!');return;}
+  ST.currentQ=0;
+  renderSurvey();
+  goTo('s-survey');
+}
+
+function buildColorGrid(){
+  const g=document.getElementById('color-grid');
+  g.innerHTML='';
+  COLORS.forEach(c=>{
+    const d=document.createElement('div');
+    d.dataset.chip=c.key;
+    d.style.cssText=`background:${c.bg};border:2.5px solid #1E1B3A;border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;font-size:12px;color:#1E1B3A;box-shadow:3px 3px 0 #1E1B3A;`;
+    d.innerHTML=`<div style="width:28px;height:28px;border-radius:50%;border:2px solid #1E1B3A;margin:0 auto 5px;background:${c.dot}"></div><div>${c.key}</div><div style="font-size:10px;color:#7C6F9A;margin-top:2px;font-family:'Noto Sans KR',sans-serif;">${c.desc}</div>`;
+    d.onclick=()=>selectColor(c.key);
+    g.appendChild(d);
+  });
+}
+
+// ── 간이 진단 ─────────────────────────────────
+function startDiag(){
+  ST.diagWarmCool=[];
+  diagQ1Step=0;
+  renderDiag1();
+  goTo('s-diag-1');
+}
+
+function renderDiag1(){
+  const q = DIAG_Q1[diagQ1Step];
+  document.getElementById('diag1-content').innerHTML = `
+    <div style="font-size:13px;color:#7C6F9A;margin-bottom:8px;">질문 ${diagQ1Step+1} / 3</div>
+    <div style="font-size:18px;color:#1E1B3A;margin-bottom:16px;">${q.text}</div>
+    <div style="display:grid;grid-template-columns:1fr;gap:12px;">
+      ${q.opts.map(o=>`
+        <div onclick="selectDiag1('${o.key}')" style="background:#D8D0FF;border:3px solid #1E1B3A;border-radius:14px;padding:16px 14px;cursor:pointer;font-size:15px;color:#1E1B3A;box-shadow:4px 4px 0 #1E1B3A;">
+          <div style="font-size:15px;font-weight:700;line-height:1.6;">${o.label}</div>
+          <div style="font-size:12px;color:#7C6F9A;margin-top:6px;">(${o.desc})</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function selectDiag1(key){
+  ST.diagWarmCool.push(key);
+  if(diagQ1Step < DIAG_Q1.length - 1){
+    diagQ1Step++;
+    renderDiag1();
+  } else {
+    renderDiag2();
+    goTo('s-diag-2');
+  }
+}
+
+function renderDiag2(){
+  const warmCount = ST.diagWarmCool.filter(v => v === 'W').length;
+  const coolCount = ST.diagWarmCool.filter(v => v === 'C').length;
+
+  let opts = [];
+  let toneText = '';
+
+  if (warmCount > coolCount) {
+    opts = DIAG_WARM_OPTS;
+    toneText = '웜(Warm) 쪽 응답이 더 많아요 🌅';
+  } else if (coolCount > warmCount) {
+    opts = DIAG_COOL_OPTS;
+    toneText = '쿨(Cool) 쪽 응답이 더 많아요 💙';
+  } else {
+    opts = [...DIAG_WARM_OPTS, ...DIAG_COOL_OPTS];
+    toneText = '웜/쿨 응답이 비슷해서 전체 색감 중에서 골라봐요 🎨';
+  }
+
+  document.getElementById('diag2-content').innerHTML = `
+    <div style="margin-bottom:14px;font-size:14px;color:#7C6F9A;font-family:'Noto Sans KR',sans-serif;line-height:1.7;">
+      1단계 결과: ${toneText}<br>
+      아래 설명 중 내 얼굴이 가장 맑아 보이는 색을 골라봐!
+    </div>
+
+    <div style="font-size:17px;color:#1E1B3A;margin-bottom:14px;">
+      ${warmCount > coolCount
+        ? 'Q4. 어떤 옷을 입었을 때 "오늘 예쁘다!"라는 말을 듣나요?'
+        : coolCount > warmCount
+        ? 'Q5. 어떤 색깔 크레파스로 칠할 때 내 얼굴이 더 맑아 보이나요?'
+        : 'Q4/Q5. 아래 설명 중 가장 잘 어울리는 색은?'}
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      ${opts.map((o, idx)=>`
+        <div onclick="selectDiag2('${o.key}')" style="background:#D8D0FF;border:2.5px solid #1E1B3A;border-radius:13px;padding:12px 16px;cursor:pointer;font-size:15px;color:#1E1B3A;box-shadow:4px 4px 0 #1E1B3A;display:flex;align-items:center;gap:12px;">
+          <div style="width:28px;height:28px;border-radius:50%;border:2px solid #1E1B3A;flex-shrink:0;background:${COLORS.find(c=>c.key===o.key)?.dot||'#ccc'};"></div>
+          <div>
+            <div style="font-weight:700;">${idx+1}. ${o.desc}</div>
+            <div style="font-size:12px;color:#7C6F9A;margin-top:2px;font-family:'Noto Sans KR',sans-serif;">(${o.key})</div>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function selectDiag2(key){
+  ST.personalColor = key;
+  alert(`진단 완료! 당신은 ${key} 타입이에요 🎨`);
+  ST.currentQ=0;
+  renderSurvey();
+  goTo('s-survey');
+}
+
+// ── 설문 ──────────────────────────────────────
+function renderSurvey(){
+  const q=SQ[ST.currentQ];
+  const saved=ST.surveyAnswers[ST.currentQ];
+  const pct=Math.round(((ST.currentQ+1)/9)*100);
+
+  document.getElementById('q-prog-txt').textContent=`Q${ST.currentQ+1} / 9`;
+  document.getElementById('q-prog-pct').textContent=pct+'%';
+  document.getElementById('pbar').style.width=pct+'%';
+  document.getElementById('q-num').textContent=`Q${ST.currentQ+1}`;
+  document.getElementById('q-text').textContent=q.text;
+
+  document.getElementById('q-options').innerHTML=q.opts.map(o=>{
+    const sel=saved===o.key;
+    return `<button onclick="selectAnswer('${o.key}')" style="display:flex;align-items:flex-start;gap:12px;width:100%;padding:14px 16px;font-size:16px;background:${sel?'#FFD93D':'#D8D0FF'};color:#1E1B3A;border:${sel?'3':'2.5'}px solid #1E1B3A;border-radius:13px;box-shadow:${sel?'2px 2px':'4px 4px'} 0 #1E1B3A;cursor:pointer;text-align:left;transform:${sel?'translate(2px,2px)':'none'};">
+      <span style="width:28px;height:28px;border-radius:50%;background:${sel?'#C94F80':'#1E1B3A'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">${o.key}</span>
+      <span style="flex:1;">${o.text}</span>
+      ${sel?'<span style="flex-shrink:0;font-size:13px;background:#FF7BAC;color:#fff;border:2px solid #1E1B3A;border-radius:99px;padding:2px 10px;align-self:center;">✔ 선택</span>':''}
+    </button>`;
+  }).join('');
+
+  document.getElementById('survey-next').textContent=ST.currentQ===8?'결과 보기 🎉':'다음 →';
+}
+
+function selectAnswer(k){
+  ST.surveyAnswers[ST.currentQ]=k;
+  renderSurvey();
+}
+
+function surveyPrev(){
+  if(ST.currentQ===0) goTo('s-color');
+  else {
+    ST.currentQ--;
+    renderSurvey();
+  }
+}
+
+function surveyNext(){
+  if(!ST.surveyAnswers[ST.currentQ]){
+    alert('선택해주세요!');
+    return;
+  }
+  if(ST.currentQ<8){
+    ST.currentQ++;
+    renderSurvey();
+  } else {
+    startLoading();
+  }
+}
+
+// ── 결과 계산 ─────────────────────────────────
+function calcResult(){
+  const sc={};
+  Object.keys(PERSONAS).forEach(k=>sc[k]=0);
+
+  SQ.forEach((q,qi)=>{
+    const ans=ST.surveyAnswers[qi];
+    if(!ans) return;
+    const opt=q.opts.find(o=>o.key===ans);
+    if(opt && opt.sc){
+      opt.sc.forEach(s=>{
+        if(sc[s]!==undefined) sc[s]++;
+      });
+    }
+  });
+
+  const sorted=Object.entries(sc).sort((a,b)=>b[1]-a[1]);
+  return sorted[0][0];
+}
+
+function startLoading(){
+  goTo('s-loading');
+  const msgs=[
+    '퍼스널컬러 데이터 연산 중...',
+    '스타일 DNA 분석 중...',
+    '맞춤 페르소나 매칭 중...',
+    '결과 카드 생성 중...'
+  ];
+  let i=0;
+  const iv=setInterval(()=>{
+    document.getElementById('loading-msg').textContent=msgs[i%msgs.length];
+    i++;
+    if(i>=msgs.length+1){
+      clearInterval(iv);
+      showResult();
+    }
+  },650);
+}
+
+function buildSpinner(){
+  const s=document.getElementById('spinner');
+  ['#FF7BAC','#A78BFA','#FFD93D','#5ECFA8','#FF9B6A','#FF7BAC','#A78BFA','#FFD93D','#5ECFA8','#FF9B6A','#FF7BAC','#A78BFA','#FFD93D','#5ECFA8','#FF9B6A','#FF7BAC']
+    .forEach((c,i)=>{
+      const sp=document.createElement('span');
+      sp.style.cssText=`background:${c};animation-delay:${(i*0.075).toFixed(2)}s`;
+      s.appendChild(sp);
+    });
+}
+
+// ── 결과 화면 렌더링 ──────────────────────────
+function showResult() {
+  const pN = calcResult();
+  const p = PERSONAS[pN];
+  const isF = ST.gender === 'W';
+  ST.result = pN;
+
+  document.getElementById('result-badge').textContent = `나의 맵시TI: ${p.icon} ${pN}`;
+
+  const genderKey = isF ? 'W' : 'M';
+  const charData = CHARACTER_ASSETS[pN]?.[genderKey];
+
+  const ch = document.getElementById('char-img');
+  if (charData) {
+    ch.innerHTML = `
+      <img
+        src="${charData.src}"
+        alt="${pN} ${charData.nickname}"
+        style="width:100%;height:100%;object-fit:contain;display:block;border-radius:12px;"
+        onerror="this.style.display='none'; this.parentNode.innerHTML='🎭';"
+      >
+    `;
+  } else {
+    ch.textContent = isF ? p.eF : p.eM;
+    ch.style.fontSize = '64px';
+  }
+
+  document.getElementById('result-char').style.background = p.bg;
+  document.getElementById('result-title').textContent = `${p.icon} ${pN}`;
+  document.getElementById('result-sub').textContent = charData
+    ? `${charData.nickname} · ${charData.subtitle}`
+    : (isF ? p.tF : p.tM);
+
+  const dc = document.getElementById('result-desc-card');
+  dc.style.background = p.bg;
+
+  const seasonText = SEASON_RESULT_TEXT[ST.personalColor] || '';
+
+  document.getElementById('result-desc').innerHTML = `
+    <div style="font-size:16px;color:#C94F80;margin-bottom:10px;">${p.q}</div>
+    <div style="font-family:'Noto Sans KR',sans-serif;font-size:15px;line-height:1.8;color:#1E1B3A;">${p.d}</div>
+    ${seasonText ? `<div style="margin-top:10px;font-size:14px;color:#7C6F9A;font-family:'Noto Sans KR',sans-serif;line-height:1.7;">${seasonText}</div>` : ''}
+    <div style="margin-top:12px;padding:12px;background:#fff;border-radius:12px;border:2px dashed #E2C9F0;font-size:15px;color:#C94F80;">✨ ${p.pt}</div>
+  `;
+
+  document.getElementById('result-items').innerHTML =
+    '<div style="margin-top:14px;font-size:17px;color:#1E1B3A;margin-bottom:6px;">당신의 최애 아이템 🛍️</div>' +
+    p.items.map(i => `
+      <div style="font-size:15px;padding:7px 0;border-bottom:2px dashed #E2C9F0;color:#1E1B3A;font-family:'Noto Sans KR',sans-serif;">• ${i}</div>
+    `).join('');
+
+  document.getElementById('style-tip-card').style.background = p.bg;
+  document.getElementById('style-tip-text').textContent = p.tip;
+
+  document.getElementById('point-color-card').style.background = p.bg;
+  const guide = COLOR_GUIDE[ST.personalColor] || {
+    ms: ['블랙', '화이트', '그레이'],
+    zz: ['블랙', '화이트', '그레이']
+  };
+  const allColors = [...new Set([...guide.ms, ...guide.zz])].slice(0, 6);
+
+  document.getElementById('point-color-tags').innerHTML =
+    `<div style="font-size:12px;color:#7C6F9A;margin-bottom:6px;font-family:'Noto Sans KR',sans-serif;">${ST.personalColor} 추천 컬러</div>` +
+    allColors.map(c => `<span class="tag" style="background:#fff;color:#1E1B3A;">${c}</span>`).join('');
+
+  buildCatTabs();
+  updateSelects();
+  document.getElementById('product-results').innerHTML = '';
+  document.getElementById('shop-links').innerHTML = '';
+
+  goTo('s-result');
+}
+
+// ── 카테고리 탭 ───────────────────────────────
+function buildCatTabs(){
+  const cats=['상의','아우터','팬츠','니트/카디건'];
+  if(ST.gender==='W') cats.push('원피스','스커트','트레이닝');
+  else cats.push('트레이닝');
+
+  document.getElementById('cat-tabs').innerHTML=cats.map(c=>{
+    const sel=c===ST.selectedCat;
+    return `<button onclick="selectCat('${c}')" style="padding:8px 16px;font-size:15px;background:${sel?'#FF7BAC':'#D8D0FF'};color:${sel?'#fff':'#1E1B3A'};border:2.5px solid #1E1B3A;border-radius:99px;box-shadow:${sel?'2px 2px':'3px 3px'} 0 #1E1B3A;cursor:pointer;transform:${sel?'translate(1px,1px)':'none'};">${c}</button>`;
+  }).join('');
+}
+
+function selectCat(cat){
+  ST.selectedCat=cat;
+  buildCatTabs();
+  updateSelects();
+  document.getElementById('product-results').innerHTML='';
+  document.getElementById('shop-links').innerHTML='';
+}
+
+function updateSelects(){
+  const catFits=CAT_FITS[ST.selectedCat]||['레귤러핏','루즈핏','슬림핏'];
+  const styleFits=STYLE_FIT_MAP[ST.result]||[];
+  const smartFits=catFits.filter(f=>styleFits.some(sf=>f.includes(sf)));
+  const fitOpts=smartFits.length>0?[...smartFits,...catFits.filter(f=>!smartFits.includes(f))]:catFits;
+
+  const fitSel=document.getElementById('fit-select');
+  fitSel.innerHTML=fitOpts.map(f=>`<option value="${f}">${f}</option>`).join('');
+
+  const guide=COLOR_GUIDE[ST.personalColor]||{ms:['블랙','화이트','그레이']};
+  const colSel=document.getElementById('color-select');
+  colSel.innerHTML=guide.ms.map(c=>`<option value="${c}">${c}</option>`).join('');
+}
+
+// ── 상품 로드: 프론트 전용 안내 + 검색 링크 ───────────────
+function loadProducts(){
+  const fit = document.getElementById('fit-select').value;
+  const color = document.getElementById('color-select').value;
+  const cat = ST.selectedCat;
+  const genderLabel = ST.gender === 'W' ? '여성' : '남성';
+
+  const btn = document.getElementById('preview-btn');
+  const resEl = document.getElementById('product-results');
+  const shopLinksEl = document.getElementById('shop-links');
+
+  btn.textContent = '⚡ 맞춤 상품 보기';
+  btn.disabled = false;
+
+  resEl.innerHTML = `
+    <div style="padding:16px;background:#FFF8E1;border:2px solid #1E1B3A;border-radius:12px;box-shadow:3px 3px 0 #1E1B3A;color:#1E1B3A;line-height:1.7;">
+      현재 프론트 화면만 연결된 상태예요.<br>
+      아래 버튼으로 선택한 조건에 맞는 쇼핑몰 검색 페이지로 바로 이동할 수 있어요.
+    </div>
+  `;
+
+  const mQuery = `${fit} ${color} ${genderLabel} ${cat}`;
+  const zQuery = `${fit} ${color} ${cat}`;
+  const mGender = ST.gender === 'W' ? 'F' : 'M';
+
+  let linksHtml = `
+    <a href="https://www.musinsa.com/search/goods?keyword=${encodeURIComponent(mQuery)}&gf=${mGender}" target="_blank" style="flex:1;display:block;padding:12px;text-align:center;font-size:15px;background:#1E1B3A;color:#fff;border:3px solid #1E1B3A;border-radius:12px;box-shadow:4px 4px 0 #A78BFA;text-decoration:none;">
+      무신사 검색하기 →
+    </a>
+  `;
+
+  if (ST.gender === 'W') {
+    linksHtml += `
+      <a href="https://zigzag.kr/search?keyword=${encodeURIComponent(zQuery)}" target="_blank" style="flex:1;display:block;padding:12px;text-align:center;font-size:15px;background:#A78BFA;color:#fff;border:3px solid #1E1B3A;border-radius:12px;box-shadow:4px 4px 0 #1E1B3A;text-decoration:none;">
+        지그재그 검색하기 →
+      </a>
+    `;
+  }
+
+  shopLinksEl.innerHTML = linksHtml;
+}
+
+function shareResult(){
+  const shareText = `나의 맵시TI 결과는 ${ST.result || '미완료'} / 퍼스널컬러는 ${ST.personalColor || '미선택'}! ✨`;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(shareText)
+      .then(() => alert('결과 문구를 복사했어! 원하는 곳에 붙여넣어줘 📋'))
+      .catch(() => alert(shareText));
+  } else {
+    alert(shareText);
+  }
+}
+
+function resetAll(){
+  Object.assign(ST,{
+    gender:null,
+    personalColor:null,
+    diagWarmCool:[],
+    diagStep:1,
+    surveyAnswers:{},
+    currentQ:0,
+    result:null,
+    selectedCat:'상의',
+    fitOptions:[],
+    colorOptions:[]
+  });
+
+  diagQ1Step=0;
+
+  ['W','M'].forEach(x=>{
+    const el=document.getElementById('gc-'+x);
+    if(el){
+      el.style.background='#D8D0FF';
+      el.style.borderColor='#1E1B3A';
+      el.style.boxShadow='5px 5px 0 #1E1B3A';
+    }
+  });
+
+  buildColorGrid();
+  document.getElementById('product-results').innerHTML='';
+  document.getElementById('shop-links').innerHTML='';
+
+  goTo('s-intro');
+}
+
+// ── 초기화 ────────────────────────────────────
+buildColorGrid();
+buildSpinner();
+</script>
+</body>
+</html>
