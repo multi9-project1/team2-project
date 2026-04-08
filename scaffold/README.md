@@ -129,7 +129,6 @@
 
 ```text
 project-root/                              # 프로젝트 최상위 루트
-
 ├── frontend/                              # 사용자 화면을 담당하는 프론트엔드
 │   ├── index.html                         # 메인 진입 페이지
 │   ├── survey.html                        # 사용자 설문 페이지
@@ -147,7 +146,7 @@ project-root/                              # 프로젝트 최상위 루트
 ├── backend/                               # FastAPI 기반 백엔드 서버
 │   ├── app/
 │   │   ├── main.py                        # FastAPI 앱 실행 진입점
-│   │   ├── api/
+│   │   ├── api
 │   │   │   ├── router.py                  # 전체 API 라우터 등록
 │   │   │   └── routes/
 │   │   │       └── recommendation.py      # 추천 결과 요청/응답 엔드포인트
@@ -159,12 +158,10 @@ project-root/                              # 프로젝트 최상위 루트
 │   │   │   ├── persona_service.py         # 사용자 유형 분류 로직
 │   │   │   └── recommendation_service.py  # 최종 추천 결과 생성 서비스
 │   │   ├── logic/
-│   │   │   ├── fashion_config.py                 # 설정값, 매핑 규칙, 데이터 창고
-│   │   │   ├── survey_parser.py                  # 설문 응답을 분석 가능한 형태로 변환
-│   │   │   ├── item_feature_builder.py           # 상품 특징 벡터 생성
-│   │   │   ├── recommender.py                    # 추천 알고리즘 핵심 로직
-│   │   │   └── fashion_data.csv                  # 패션 원천 데이터셋
-│   │   │                                           
+│   │   ├── fashion_config.py          # 설정값, 매핑 규칙, 데이터 창고
+│   │   │   ├── survey_parser.py           # 설문 응답을 분석 가능한 형태로 변환
+│   │   │   ├── item_feature_builder.py    # 상품 특징 벡터 생성
+│   │   │   └── recommender.py             # 추천 알고리즘 핵심 로직
 │   │   ├── crawlers/
 │   │   │   ├── musinsa_crawler.py         # 무신사 상품 정보 수집
 │   │   │   └── zigzag_crawler.py          # 지그재그 상품 정보 수집

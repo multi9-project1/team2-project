@@ -34,6 +34,19 @@ except ImportError:
     from survey_parser import collect_style_search_keywords, create_survey_profile
 
 app = FastAPI(title="Fashion Recommendation API", version="0.1.0")
+
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5500",
+        "http://localhost:5501",
+        "http://127.0.0.1:5500",
+        "http://127.0.0.1:5501",
+    ],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 PROJECT_ROOT = Path(__file__).resolve().parent
 DEFAULT_DATASET_CSV_CANDIDATES = [
     PROJECT_ROOT / "fashion_data.csv",
@@ -736,7 +749,12 @@ def get_recommendation_summary_text(request: RecommendationQueryRequest) -> Dict
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"unexpected error: {exc}") from exc
 
-    return {"text": result["preference_analysis"]["text"]}
+    return {
+        "text": result["preference_analysis"]["text"],
+        "recommendations": result.get("recommendation_results", []),
+        "user_profile": result.get("user_profile", {}),
+        "preference_analysis": result.get("preference_analysis", {}),
+    }
 
 
 @app.post("/crawl/musinsa")
