@@ -4,6 +4,15 @@ from typing import Any, Dict, List
 
 try:
     from app.logic.fashion_config import PERSONAL_COLOR_PLATFORM_KEYWORD_MAP, STYLE_LABELS, TPO_OPTION_TO_DEEPLINK_KEYWORD
+    from logic.item_feature_builder import load_dataset_item_records
+    from logic.recommender import (
+        collect_top_similarity_matches,
+        derive_style_profile_from_similarity_matches,
+        filter_items_by_user_gender,
+    )
+    from app.logic.survey_parser import collect_style_search_keywords, create_survey_profile
+except ImportError:
+    from app.logic.fashion_config import PERSONAL_COLOR_PLATFORM_KEYWORD_MAP, STYLE_LABELS, TPO_OPTION_TO_DEEPLINK_KEYWORD
     from app.logic.item_feature_builder import load_dataset_item_records
     from app.logic.recommender import (
         collect_top_similarity_matches,
@@ -11,15 +20,6 @@ try:
         filter_items_by_user_gender,
     )
     from app.logic.survey_parser import collect_style_search_keywords, create_survey_profile
-except ImportError:
-    from fashion_config import PERSONAL_COLOR_PLATFORM_KEYWORD_MAP, STYLE_LABELS, TPO_OPTION_TO_DEEPLINK_KEYWORD
-    from item_feature_builder import load_dataset_item_records
-    from recommender import (
-        collect_top_similarity_matches,
-        derive_style_profile_from_similarity_matches,
-        filter_items_by_user_gender,
-    )
-    from survey_parser import collect_style_search_keywords, create_survey_profile
 
 MUSINSA_STYLE_ID_MAP: Dict[str, int] = {
     "캐주얼": 1,
