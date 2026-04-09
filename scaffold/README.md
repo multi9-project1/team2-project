@@ -130,7 +130,9 @@
 ```text
 project-root/                              # 프로젝트 최상위 루트
 ├── frontend/                              # 사용자 화면을 담당하는 프론트엔드
-│   ├── index.html                         # 메인 페이지
+│   ├── index.html                         # 메인 진입 페이지
+│   ├── survey.html                        # 사용자 설문 페이지
+│   ├── result.html                        # 추천 결과 페이지
 │   ├── css/
 │   │   └── style.css                      # 전체 공통 스타일 파일
 │   ├── js/
@@ -163,6 +165,10 @@ project-root/                              # 프로젝트 최상위 루트
 │   │   ├── crawlers/
 │   │   │   ├── musinsa_crawler.py         # 무신사 상품 정보 수집
 │   │   │   └── zigzag_crawler.py          # 지그재그 상품 정보 수집
+│   │   ├── models/
+│   │   │   └── kmeans_model.pkl           # 학습된 K-Means 모델 파일
+│   │   └── utils/
+│   │       └── helpers.py                 # 공통 보조 함수
 │   ├── requirements.txt                   # Python 패키지 의존성 목록
 │   └── .env.example                       # 환경변수 예시 파일
 │

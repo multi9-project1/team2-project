@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import time
 import traceback
 import urllib.parse
@@ -12,7 +14,6 @@ except ImportError:
         from .recommendation_search_profile import build_recommendation_search_profile
     except ImportError:
         from recommendation_search_profile import build_recommendation_search_profile
-
 
 # ============================================================
 # 1. 카테고리 & 스타일 코드 정의 (무신사 기준)
@@ -39,8 +40,7 @@ CATEGORIES = {
         "레깅스":                "003005",
     },
     "원피스&스커트": {
-        "원피스":   "100",
-        "스커트":   "100",
+        "전체(원피스&스커트)":   "100",
         "미디원피스":            "100002",
         "맥시원피스":            "100003",
         "미니원피스":            "100001",
@@ -48,6 +48,15 @@ CATEGORIES = {
         "미니스커트":            "100004",
         "롱스커트":              "100006",
     }
+}
+
+TOP_LEVEL_CATEGORY_CODE_MAP = {
+    "상의": "001",
+    "아우터": "002",
+    "팬츠": "003",
+    "바지": "003",
+    "니트/카디건": "001006",
+    "트레이닝": "003004",
 }
 
 MUSINSA_STYLE_ID_MAP = {
@@ -70,7 +79,6 @@ FIT_CODE_MAP = {
     "슬림": "2^87",
 }
 
-# MAPSITI의 핏 표기를 무신사 FIT_CODE_MAP 키로 변환하기 위한 맵핑
 FIT_DISPLAY_TO_KEY = {
     "루즈": "오버사이즈",
     "노멀": "레귤러",
@@ -203,15 +211,6 @@ PERSONAL_COLOR_DISPLAY_TO_LEGACY_KEY = {
     "겨울 쿨": "겨울쿨",
 }
 
-TOP_LEVEL_CATEGORY_CODE_MAP = {
-    "상의": "001",
-    "아우터": "002",
-    "팬츠": "003",
-    "바지": "003",
-    "니트/카디건": "001006",
-    "트레이닝": "003004",
-}
-
 # ============================================================
 # 3. 데이터 조립 및 크롤링 핵심 함수
 # ============================================================
@@ -223,10 +222,8 @@ def build_profile(mapsiti: str, personal_color: str, gender: str) -> dict:
     if not mapsiti_info or not color_info:
         raise ValueError("잘못된 MAPSITI 또는 퍼스널컬러 입력입니다.")
 
-    # 추천 스타일 무신사 코드로 변환
     style_codes = [MUSINSA_STYLE_ID_MAP[s] for s in mapsiti_info["styles"] if s in MUSINSA_STYLE_ID_MAP]
     
-    # 핏 디스플레이 텍스트를 무신사 핏 코드로 변환
     fit_codes = []
     for fit_text in mapsiti_info["fit_display"]:
         fit_key = FIT_DISPLAY_TO_KEY.get(fit_text)
@@ -249,6 +246,7 @@ def build_profile(mapsiti: str, personal_color: str, gender: str) -> dict:
         "gender": gender,
     }
 
+
 def build_recommendation_aligned_profile(
     survey_answers: dict,
     *,
@@ -261,86 +259,15 @@ def build_recommendation_aligned_profile(
         allow_mock=allow_mock,
     )
     deeplink_context = search_profile["deeplink_context"]
-
-    legacy_style_name = _resolve_legacy_musinsa_style_name(
-        deeplink_context["primary_style_display"]
-    )
-    legacy_personal_color_key = _resolve_legacy_personal_color_key(
-        deeplink_context["personal_color_display"]
-    )
+    legacy_style_name = _resolve_legacy_musinsa_style_name(deeplink_context["primary_style_display"])
+    legacy_personal_color_key = _resolve_legacy_personal_color_key(deeplink_context["personal_color_display"])
     legacy_gender_code = "F" if deeplink_context["gender"] == "W" else "M"
-
-    legacy_profile = build_profile(
-        legacy_style_name,
-        legacy_personal_color_key,
-        legacy_gender_code,
-    )
+    legacy_profile = build_profile(legacy_style_name, legacy_personal_color_key, legacy_gender_code)
     legacy_profile["deeplink_context"] = deeplink_context
     legacy_profile["recommendation_primary_style_display"] = deeplink_context["primary_style_display"]
     legacy_profile["recommendation_secondary_style_codes"] = deeplink_context["secondary_style_codes"]
     legacy_profile["recommendation_tpo_keyword"] = deeplink_context["tpo_keyword"]
     return legacy_profile
-
-
-def resolve_musinsa_category_code(category_name: str) -> str | None:
-    if category_name in TOP_LEVEL_CATEGORY_CODE_MAP:
-        return TOP_LEVEL_CATEGORY_CODE_MAP[category_name]
-
-    for grouped_categories in CATEGORIES.values():
-        if category_name in grouped_categories:
-            return grouped_categories[category_name]
-
-    return None
-
-
-def should_apply_musinsa_color_filter(category_name: str) -> bool:
-    return category_name not in {
-        "팬츠",
-        "바지",
-        "데님 팬츠",
-        "슈트 팬츠&슬랙스",
-        "코튼 팬츠",
-        "숏 팬츠",
-        "트레이닝&조거 팬츠",
-    }
-
-
-def _resolve_selected_color_keywords(
-    available_color_keywords: list[str],
-    selected_color: str | None,
-    *,
-    allow_color_filter: bool,
-) -> list[str]:
-    if not allow_color_filter:
-        return []
-    if not available_color_keywords:
-        return []
-    if not selected_color:
-        return [available_color_keywords[0]]
-
-    normalized_selected_color = _normalize_filter_keyword(selected_color)
-    for available_color_keyword in available_color_keywords:
-        if _normalize_filter_keyword(available_color_keyword) == normalized_selected_color:
-            return [available_color_keyword]
-    return [available_color_keywords[0]]
-
-
-def _normalize_filter_keyword(raw_keyword: str) -> str:
-    return str(raw_keyword or "").strip().lower().replace(" ", "")
-
-
-def _resolve_legacy_musinsa_style_name(recommendation_style_display: str) -> str:
-    return RECOMMENDATION_STYLE_TO_LEGACY_STYLE.get(
-        recommendation_style_display,
-        recommendation_style_display,
-    )
-
-
-def _resolve_legacy_personal_color_key(personal_color_display: str) -> str:
-    resolved_key = PERSONAL_COLOR_DISPLAY_TO_LEGACY_KEY.get(personal_color_display)
-    if not resolved_key:
-        raise ValueError(f"무신사 퍼스널컬러 매핑이 없습니다: {personal_color_display}")
-    return resolved_key
 
 
 def build_category_url(
@@ -364,18 +291,21 @@ def build_category_url(
     url += "&sortCode=SALE_ONE_WEEK_COUNT"
     return url
 
-import tempfile
 
-def create_driver(chrome_version: int = 146):
-    options = uc.ChromeOptions()
-    options.add_argument("--headless=new")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--window-size=1440,1200")
-    options.add_argument("--disable-popup-blocking")
-    options.add_argument(f"--user-data-dir={tempfile.mkdtemp(prefix='uc_profile_')}")
-    return uc.Chrome(options=options, version_main=chrome_version)
+def resolve_musinsa_category_code(category_name: str) -> str | None:
+    if category_name in TOP_LEVEL_CATEGORY_CODE_MAP:
+        return TOP_LEVEL_CATEGORY_CODE_MAP[category_name]
+
+    for grouped_categories in CATEGORIES.values():
+        if category_name in grouped_categories:
+            return grouped_categories[category_name]
+
+    return None
+
+
+def should_apply_musinsa_color_filter(category_name: str) -> bool:
+    return category_name not in {"팬츠", "바지", "데님 팬츠", "슈트 팬츠&슬랙스", "코튼 팬츠", "숏 팬츠", "트레이닝&조거 팬츠"}
+
 
 def crawl_musinsa(
     url: str,
@@ -387,158 +317,96 @@ def crawl_musinsa(
     print(f"\n  ▶ [{category_name}] 상품 정보를 무신사에서 가져오는 중...")
     print(f"    🔗 요청 URL: {url}")
 
-    last_exception: Exception | None = None
-
     for attempt_index in range(1, max_attempts + 1):
         print(f"    🔄 시도 {attempt_index}/{max_attempts}")
         driver = None
         scraped_items: list[dict] = []
 
         try:
-            driver = create_driver(chrome_version)
+            options = uc.ChromeOptions()
+            options.add_argument("--headless")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--window-size=1920,1080")
+            driver = uc.Chrome(options=options, version_main=chrome_version)
+            driver.set_page_load_timeout(20)
+
             driver.get(url)
             time.sleep(5)
+            
+            for _ in range(4):
+                driver.execute_script("window.scrollBy(0, 800);")
+                time.sleep(1)
 
-            current_url = driver.current_url
-            print(f"    📍 실제 접속 URL: {current_url}")
-
-            driver.execute_script("window.scrollTo(0, 800);")
-            time.sleep(3)
-
-            page_source = driver.page_source
-            print(f"    📄 페이지 소스 길이: {len(page_source)}")
-            soup = BeautifulSoup(page_source, "html.parser")
-            product_links = soup.select("a[data-item-id]")
-            print(f"    🧾 감지된 상품 링크 수: {len(product_links)}")
-
-            if not product_links:
-                page_preview = " ".join(page_source[:300].split())
-                print(f"    ❗ [{category_name}] 상품 링크를 찾지 못했습니다.")
-                print(f"    📝 페이지 미리보기: {page_preview}")
-                return []
-
+            soup = BeautifulSoup(driver.page_source, "html.parser")
+            images = soup.find_all("img")
+            
             seen_titles = set()
 
-            for product_link in product_links:
+            for img in images:
                 if len(scraped_items) >= top_n:
                     break
 
-                image_element = product_link.select_one("img")
-                if not image_element:
+                src = img.get("data-original") or img.get("src") or ""
+                if not src or "data:" in src or "thumb" not in src: 
                     continue
 
-                try:
-                    brand = product_link.get("data-item-brand", "브랜드 없음")
-                    raw_price = product_link.get("data-price", "0")
-                    price = f"{int(raw_price):,}" if raw_price.isdigit() else raw_price
-                    title = image_element.get("alt", "").strip()
-                    image_url = image_element.get("src", "")
+                parent = img.parent
+                text = ""
+                for _ in range(5):
+                    text = parent.get_text(separator=" | ", strip=True)
+                    if 10 < len(text) < 300 and any(c.isdigit() for c in text):
+                        break
+                    parent = parent.parent
+                    if not parent: break
 
-                    if image_url.startswith("//"):
-                        image_url = "https:" + image_url
-
-                    if not title or title in seen_titles:
-                        continue
-
-                    seen_titles.add(title)
-                    scraped_items.append(
-                        {
-                            "brand": brand,
-                            "title": title,
-                            "price": price,
-                            "img_url": image_url,
-                        }
-                    )
-                except Exception:
+                if len(text) < 10 or not any(c.isdigit() for c in text):
                     continue
+                    
+                parts = [p.strip() for p in text.split(" | ") if p.strip()]
+                if len(parts) < 2: continue
+                
+                brand = parts[0]
+                title = parts[1]
+                
+                if title in seen_titles: continue
+                
+                price = "0"
+                for p in parts:
+                    if '원' in p:
+                        price = p.replace('원', '').replace(',', '').strip()
+                        break
+                if not price.isdigit():
+                    for p in parts:
+                        clean = p.replace(',', '')
+                        if clean.isdigit() and int(clean) > 100:
+                            price = clean
+                            break
+                            
+                price_formatted = f"{int(price):,}" if price.isdigit() else price
+                if src.startswith("//"): src = "https:" + src
+                
+                seen_titles.add(title)
+                scraped_items.append({
+                    "brand": brand,
+                    "title": title,
+                    "price": price_formatted,
+                    "img_url": src,
+                })
 
-            print(f"    ✅ [{category_name}] {len(scraped_items)}개 추출 완료")
-            return scraped_items
+            if scraped_items:
+                print(f"    ✅ {len(scraped_items)}개 수집 성공")
+                return scraped_items
 
         except Exception as exc:
-            last_exception = exc
-            print(f"    🚨 시도 {attempt_index} 실패: {type(exc).__name__}: {exc}")
-            print("    🪵 스택트레이스:")
-            for trace_line in traceback.format_exc().strip().splitlines():
-                print(f"       {trace_line}")
             if attempt_index < max_attempts:
-                print("    ⏳ 브라우저를 새로 열어 한 번 더 시도합니다.")
                 time.sleep(2)
-
         finally:
             if driver is not None:
-                try:
-                    driver.quit()
-                except OSError:
-                    pass
-                except Exception:
-                    pass
-                driver = None
+                try: driver.quit()
+                except Exception: pass
 
-    print(f"    ❌ [{category_name}] 모든 재시도 실패")
-    if last_exception is not None:
-        print(f"    📌 최종 실패 원인: {type(last_exception).__name__}: {last_exception}")
     return []
-
-# ============================================================
-# 4. 메인 실행 컨트롤러
-# ============================================================
-def recommend_outfit(mapsiti: str, personal_color: str, gender: str, target_categories: list[str], max_colors: int = 5, top_n: int = 5):
-    profile = build_profile(mapsiti, personal_color, gender)
-    gender_text = "남성" if gender == "M" else "여성"
-    colors_to_use = profile["recommended_colors"][:max_colors]
-
-    sep = "=" * 70
-    print(f"\n{sep}")
-    print(f" 🛍️  {gender_text} | 스타일: {profile['title']} | 퍼스널컬러: {profile['personal_color']}")
-    print(f" 💡 {profile['description']}")
-    print(f" 📝 {profile['detail']}")
-    print(f" 🎨 {profile['color_description']}")
-    print(f" 👗 무신사 필터 적용: [스타일: {', '.join(profile['recommended_styles'])}] / [핏: {', '.join(profile['fit_display'])}] / [색상: {', '.join(colors_to_use)}]")
-    print(sep)
-
-    all_results = {}
-
-    for cat_name in target_categories:
-        cat_code = None
-        for group_cats in CATEGORIES.values():
-            if cat_name in group_cats:
-                cat_code = group_cats[cat_name]
-                break
-
-        if not cat_code:
-            print(f"  ⚠️ '{cat_name}' 카테고리를 찾을 수 없어 건너뜁니다.")
-            continue
-
-        # 추출된 핏 코드를 build_category_url에 전달
-        url = build_category_url(
-            category_code=cat_code,
-            gender=gender,
-            colors=colors_to_use,
-            styles=profile["style_codes"],
-            fit_codes=profile["fit_codes"]
-        )
-        
-        items = crawl_musinsa(url, cat_name, top_n=top_n)
-
-        if items:
-            all_results[cat_name] = items
-
-    print(f"\n{sep}")
-    print(" ✨ AI 맞춤 추천 상품 리스트 ✨")
-    print(sep)
-
-    if not all_results:
-        print("\n  ❌ 조건에 맞는 상품을 수집하지 못했습니다.")
-        return
-
-    for cat_name, items in all_results.items():
-        print(f"\n 📦 카테고리: [{cat_name}]")
-        print(" " + "-" * 60)
-        for idx, item in enumerate(items, 1):
-            print(f"  {idx}위. [{item['brand']}] {item['title']}")
-            print(f"       💰 {item['price']}원")
-            print(f"       🖼️  {item['img_url']}\n")
 
 
 def recommend_outfit_from_survey(
@@ -550,51 +418,21 @@ def recommend_outfit_from_survey(
     allow_mock: bool = True,
     top_n: int = 5,
 ) -> dict:
-    print("\n" + "=" * 80)
-    print("[recommend_outfit_from_survey] INPUT")
-    print("survey_answers =", survey_answers)
-    print("category_name =", category_name)
-    print("selected_color =", selected_color)
-    print("dataset_dir =", dataset_dir)
-    print("allow_mock =", allow_mock)
-    print("top_n =", top_n)
-    print("=" * 80)
-
     recommendation_profile = build_recommendation_aligned_profile(
         survey_answers,
         dataset_dir=dataset_dir,
         allow_mock=allow_mock,
     )
     deeplink_context = recommendation_profile["deeplink_context"]
-    gender_text = "남성" if recommendation_profile["gender"] == "M" else "여성"
-    available_color_keywords = recommendation_profile["recommended_colors"]
-
-    applied_color_keywords = _resolve_selected_color_keywords(
-        available_color_keywords,
-        selected_color,
-        allow_color_filter=should_apply_musinsa_color_filter(category_name),
-    )
-
-    separator_line = "=" * 70
-    print(f"\n{separator_line}")
-    print(
-        f" 🛍️  {gender_text} | 스타일: {recommendation_profile['title']} | "
-        f"퍼스널컬러: {recommendation_profile['personal_color']}"
-    )
-    print(f" 💡 {recommendation_profile['description']}")
-    print(f" 📝 {recommendation_profile['detail']}")
-    print(f" 🎨 {recommendation_profile['color_description']}")
-    print(
-        f" 👗 무신사 필터 적용: [스타일: {', '.join(recommendation_profile['recommended_styles'])}] / "
-        f"[핏코드: {', '.join(recommendation_profile['fit_codes'])}] / "
-        f"[색상: {', '.join(applied_color_keywords) or '없음'}] / "
-        f"[TPO: {deeplink_context['tpo_keyword']}]"
-    )
-    print(separator_line)
-
     category_code = resolve_musinsa_category_code(category_name)
     if not category_code:
         raise ValueError(f"무신사 카테고리를 찾을 수 없습니다: {category_name}")
+
+    applied_color_keywords = _resolve_selected_color_keywords(
+        recommendation_profile["recommended_colors"],
+        selected_color,
+        allow_color_filter=should_apply_musinsa_color_filter(category_name),
+    )
 
     category_url = build_category_url(
         category_code=category_code,
@@ -603,8 +441,6 @@ def recommend_outfit_from_survey(
         styles=recommendation_profile["style_codes"],
         fit_codes=recommendation_profile["fit_codes"],
     )
-    print("[recommend_outfit_from_survey] category_url =", category_url)
-
     scraped_items = crawl_musinsa(category_url, category_name, top_n=top_n)
 
     return {
@@ -614,34 +450,21 @@ def recommend_outfit_from_survey(
         "selected_color": applied_color_keywords[0] if applied_color_keywords else None,
         "search_keyword": recommendation_profile["title"],
         "url": category_url,
-        "applied_filters": {
-            "category": category_name,
-            "color_keywords": applied_color_keywords,
-            "style_labels": recommendation_profile["recommended_styles"],
-            "fit_codes": recommendation_profile["fit_codes"],
-            "tpo_keyword": deeplink_context["tpo_keyword"],
-        },
         "items": scraped_items,
     }
 
 
-if __name__ == "__main__":
-    print("🚀 퍼스널컬러 & STYLE_FIT 매핑 테스트를 시작합니다...\n")
+def _resolve_selected_color_keywords(available_color_keywords: list[str], selected_color: str | None, *, allow_color_filter: bool) -> list[str]:
+    if not allow_color_filter or not available_color_keywords:
+        return []
+    if not selected_color:
+        return [available_color_keywords[0]]
+    return [selected_color] if selected_color in available_color_keywords else [available_color_keywords[0]]
 
-    # [테스트 1] 모던/미니멀 & 여름뮤트 (여성)
-    recommend_outfit(
-        mapsiti="모던/미니멀",
-        personal_color="여름뮤트",
-        gender="F",
-        target_categories=["셔츠&블라우스", "슈트 팬츠&슬랙스"],
-        top_n=2
-    )
 
-    # [테스트 2] 스트리트 & 가을웜 (남성)
-    recommend_outfit(
-        mapsiti="스트리트",
-        personal_color="가을웜",
-        gender="M",
-        target_categories=["맨투맨&스웨트", "데님 팬츠"],
-        top_n=2
-    )
+def _resolve_legacy_musinsa_style_name(recommendation_style_display: str) -> str:
+    return RECOMMENDATION_STYLE_TO_LEGACY_STYLE.get(recommendation_style_display, recommendation_style_display)
+
+
+def _resolve_legacy_personal_color_key(personal_color_display: str) -> str:
+    return PERSONAL_COLOR_DISPLAY_TO_LEGACY_KEY.get(personal_color_display, "여름라이트")

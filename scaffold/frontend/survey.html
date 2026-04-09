@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>맵시TI - 설문조사</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="survey">
+  <div class="bg-pattern"></div>
+  <div class="app">
+
+    <div class="screen active" id="s-survey">
+      <div style="margin-bottom:18px;">
+        <div style="font-size:15px;color:#7C6F9A;margin-bottom:6px;display:flex;justify-content:space-between;">
+          <span id="q-prog-txt">Q1 / 9</span><span id="q-prog-pct">11%</span>
+        </div>
+        <div class="pbar-bg"><div class="pbar-fill" id="pbar" style="width:11%"></div></div>
+      </div>
+      <div class="pcard">
+        <div id="q-num" style="font-size:14px;color:#7C6F9A;margin-bottom:4px;">Q1</div>
+        <div id="q-text" style="font-size:20px;color:#1E1B3A;margin-bottom:18px;line-height:1.5;"></div>
+        <div id="q-options" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <div style="display:flex;gap:10px;margin-top:16px;">
+          <button id="survey-prev-btn" style="flex:1;padding:13px;font-family:'Jua',sans-serif;font-size:16px;background:#D8D0FF;color:#1E1B3A;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;">← 이전</button>
+          <button id="survey-next-btn" style="flex:1;padding:13px;font-family:'Jua',sans-serif;font-size:16px;background:#FFD93D;color:#1E1B3A;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;">다음 →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="s-loading">
+      <div style="text-align:center;padding:60px 20px 40px;">
+        <div style="font-size:26px;color:#1E1B3A;margin-bottom:10px;">맵시 분석 중... ✨</div>
+        <div class="spinner" id="spinner"></div>
+        <div id="loading-msg" style="font-size:16px;color:#7C6F9A;">퍼스널컬러 데이터 연산 중</div>
+        <div style="margin-top:20px;font-size:14px;color:#7C6F9A;">잠깐만 기다려줘!</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/survey.js"></script>
+</body>
+</html>

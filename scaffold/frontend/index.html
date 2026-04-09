@@ -1,36 +1,92 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>맵시TI</title>
-    <link rel="stylesheet" href="./css/style.css" />
-  </head>
-  <body>
-    <div class="bg-pattern" aria-hidden="true"></div>
-    <div class="app-shell">
-      <header class="app-header app-header--simple">
-        <div>
-          <p class="brand-kicker">맵시TI ✨</p>
-          <h1 class="brand-title">나만의 패션 페르소나를 찾아봐!</h1>
-          <p class="brand-subtitle">성별, 퍼스널컬러, 스타일, 핏 분석으로 나에게 꼭 맞는 무드를 찾아봐.</p>
-        </div>
-      </header>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>맵시TI - 시작</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="index">
+  <div class="bg-pattern"></div>
+  <div class="app">
 
-      <main id="screenHost"></main>
+    <div class="screen active" id="s-intro">
+      <div style="text-align:center;padding:20px 0 6px;font-size:40px;color:#C94F80;text-shadow:3px 3px 0 #FFD93D,6px 6px 0 #DDD6FE;letter-spacing:3px;">맵시TI ✨</div>
+      <div style="text-align:center;font-size:16px;color:#7C6F9A;margin-bottom:20px;">나만의 패션 페르소나를 찾아봐!</div>
+      <div class="pcard" style="text-align:center;background:linear-gradient(135deg,#FFD6E8,#DDD6FE);">
+        <div style="font-size:60px;margin-bottom:10px;">👗</div>
+        <div style="font-size:18px;color:#1E1B3A;line-height:1.9;">성별 & 퍼스널컬러 분석 +<br>스타일 설문 9문항으로<br>나만의 패션 DNA 발견!</div>
+      </div>
+      <div class="pcard" style="background:#FFF8E1;">
+        <div style="font-size:16px;color:#1E1B3A;line-height:2.2;">🎯 10가지 스타일 페르소나 분석<br>🛍️ 무신사 & 지그재그 맞춤 상품 추천<br>🎨 퍼스널컬러 맞춤 컬러 가이드<br>📸 결과 카드 SNS 공유 가능</div>
+      </div>
+      <button id="start-button" style="display:block;width:100%;padding:18px;font-family:'Jua',sans-serif;font-size:23px;background:#FF7BAC;color:#fff;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;">시작하기 💫</button>
     </div>
 
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div class="screen" id="s-gender">
+      <div style="text-align:center;padding:14px 0 4px;font-size:28px;color:#C94F80;text-shadow:3px 3px 0 #FFD93D,5px 5px 0 #DDD6FE;">맵시TI ✨</div>
+      <div class="pcard">
+        <div style="font-size:23px;color:#1E1B3A;text-align:center;margin-bottom:10px;">나는 어떤 스타일러?</div>
+        <div style="font-size:15px;color:#7C6F9A;text-align:center;margin-bottom:20px;line-height:1.7;">성별을 선택해줘!<br>결과 캐릭터가 달라져 🎭</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+          <div id="gc-W" style="background:#D8D0FF;border:3px solid #1E1B3A;border-radius:18px;box-shadow:5px 5px 0 #1E1B3A;padding:20px 12px;text-align:center;cursor:pointer;">
+            <img src="assets/images/female_select.png" alt="여성" style="width:80px;height:80px;object-fit:contain;display:block;margin:0 auto 8px;">
+            <div style="font-size:22px;color:#1E1B3A;">여성</div>
+            <div style="font-size:13px;color:#7C6F9A;margin-top:4px;">무신사 + 지그재그</div>
+          </div>
+          <div id="gc-M" style="background:#D8D0FF;border:3px solid #1E1B3A;border-radius:18px;box-shadow:5px 5px 0 #1E1B3A;padding:20px 12px;text-align:center;cursor:pointer;">
+            <img src="assets/images/male_select.png" alt="남성" style="width:80px;height:80px;object-fit:contain;display:block;margin:0 auto 8px;">
+            <div style="font-size:22px;color:#1E1B3A;">남성</div>
+            <div style="font-size:13px;color:#7C6F9A;margin-top:4px;">무신사</div>
+          </div>
+        </div>
+        <button id="gender-next-btn" style="display:block;width:100%;padding:15px;font-family:'Jua',sans-serif;font-size:19px;background:#FFD93D;color:#1E1B3A;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;">다음으로 →</button>
+      </div>
+    </div>
 
-    <div id="modalRoot" class="modal-root hidden" aria-hidden="true">
-      <div class="modal-card">
-        <div id="modalBody" class="modal-body"></div>
-        <div class="modal-actions">
-          <button id="modalConfirmBtn" class="btn btn-dark" type="button">확인</button>
+    <div class="screen" id="s-color">
+      <div class="pcard">
+        <div style="font-size:23px;color:#1E1B3A;text-align:center;margin-bottom:10px;">퍼스널컬러 알아? 🎨</div>
+        <div style="font-size:15px;color:#7C6F9A;text-align:center;margin-bottom:20px;line-height:1.7;">알고 있으면 바로 선택,<br>모르면 간이 진단으로 찾아줄게!</div>
+        <button id="open-color-select-btn" style="display:block;width:100%;padding:15px;font-family:'Jua',sans-serif;font-size:19px;background:#FF7BAC;color:#fff;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;margin-bottom:12px;">알아! 바로 선택할게 💅</button>
+        <button id="start-diag-btn" style="display:block;width:100%;padding:15px;font-family:'Jua',sans-serif;font-size:19px;background:#A78BFA;color:#fff;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;">모르겠어… 진단해줘 🔍</button>
+      </div>
+    </div>
+
+    <div class="screen" id="s-color-select">
+      <div class="pcard">
+        <div style="font-size:23px;color:#1E1B3A;text-align:center;margin-bottom:16px;">퍼스널컬러 선택 🎨</div>
+        <div id="color-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;"></div>
+        <button id="color-next-btn" style="display:block;width:100%;padding:15px;font-family:'Jua',sans-serif;font-size:19px;background:#FFD93D;color:#1E1B3A;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;margin-top:16px;margin-bottom:12px;">선택 완료 →</button>
+        <button id="color-back-btn" style="display:block;width:100%;padding:15px;font-family:'Jua',sans-serif;font-size:19px;background:#D8D0FF;color:#1E1B3A;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;">← 뒤로</button>
+      </div>
+    </div>
+
+    <div class="screen" id="s-diag-1">
+      <div class="pcard">
+        <div style="font-size:14px;color:#7C6F9A;margin-bottom:8px;">1단계 / 2단계</div>
+        <div style="font-size:21px;color:#1E1B3A;margin-bottom:6px;">내 피부 바탕색은? 🌈</div>
+        <div style="font-size:14px;color:#7C6F9A;margin-bottom:20px;">두 가지 질문으로 웜/쿨톤을 찾아볼게!</div>
+        <div id="diag1-content"></div>
+        <div style="display:flex;gap:10px;margin-top:16px;">
+          <button id="diag1-back-btn" style="flex:1;padding:13px;font-family:'Jua',sans-serif;font-size:16px;background:#D8D0FF;color:#1E1B3A;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;">← 뒤로</button>
         </div>
       </div>
     </div>
 
-    <script type="module" src="./js/app.js"></script>
-  </body>
+    <div class="screen" id="s-diag-2">
+      <div class="pcard">
+        <div style="font-size:14px;color:#7C6F9A;margin-bottom:8px;">2단계 / 2단계</div>
+        <div style="font-size:21px;color:#1E1B3A;margin-bottom:6px;">나에게 어울리는 색깔은? 🎨</div>
+        <div style="font-size:14px;color:#7C6F9A;margin-bottom:20px;">1단계 결과를 바탕으로 골라봐!</div>
+        <div id="diag2-content"></div>
+        <button id="diag2-back-btn" style="display:block;width:100%;padding:13px;font-family:'Jua',sans-serif;font-size:16px;background:#D8D0FF;color:#1E1B3A;border:3px solid #1E1B3A;border-radius:14px;box-shadow:5px 5px 0 #1E1B3A;cursor:pointer;margin-top:16px;">← 이전 단계로</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/survey.js"></script>
+</body>
 </html>

@@ -238,9 +238,13 @@ def parse_dataset_item_from_csv_row(csv_row: Dict[str, str]) -> Dict[str, Any] |
     if not item_id:
         return None
 
+    image_path = (csv_row.get("image_url") or "").strip()
+    if not image_path and item_id.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
+        image_path = item_id
+
     parsed_item_record = {
         "item_id": item_id,
-        "image_path": (csv_row.get("image_url") or "").strip(),
+        "image_path": image_path,
         "gender": (csv_row.get("item.gender") or "U").strip() or "U",
         "era": (csv_row.get("item.era") or "unknown").strip() or "unknown",
         "style": (csv_row.get("item.style") or "unknown").strip() or "unknown",
