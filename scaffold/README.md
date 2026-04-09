@@ -178,3 +178,57 @@ project-root/                              # 프로젝트 최상위 루트
 ├── .gitignore                             # Git 제외 파일 목록
 ├── README.md                              # 프로젝트 소개 및 실행 방법
 └── docker-compose.yml                     # 필요 시 프론트/백엔드 통합 실행 설정
+```
+
+---
+
+## 7. 배포 방법
+
+이 프로젝트는 현재 `FastAPI`가 `frontend` 정적 파일까지 함께 서빙하도록 구성되어 있으므로, 배포 시에는 **단일 Docker 서비스**로 올리는 방식이 가장 간단합니다.
+
+### 로컬에서 배포용 실행 확인
+
+프로젝트 루트에서 아래 명령으로 실행할 수 있습니다.
+
+```bash
+docker compose up --build
+```
+
+실행 후 접속 주소:
+
+- 메인 화면: `http://localhost:8001`
+- 헬스체크: `http://localhost:8001/health`
+
+### 클라우드 배포
+
+루트 `Dockerfile` 기준으로 아래와 같은 Docker 지원 플랫폼에 바로 배포할 수 있습니다.
+
+- Render
+- Railway
+- Fly.io
+- EC2 + Docker
+
+배포 설정 핵심값:
+
+- Build Context: 프로젝트 루트
+- Dockerfile Path: `Dockerfile`
+- Port: `8000`
+
+로컬 Docker Compose 실행은 기존 개발 서버와 충돌을 피하기 위해 호스트 `8001` 포트를 사용하도록 설정되어 있습니다.
+
+일부 플랫폼은 `PORT` 환경변수를 자동 주입하는데, 현재 실행 명령은 이를 반영하도록 되어 있습니다.
+
+#### Render 기준
+
+- 서비스 타입: `Web Service`
+- Runtime: `Docker`
+- Dockerfile Path: `./Dockerfile`
+- Docker Context: `.`
+- Health Check Path: `/health`
+
+저장소 루트에 `render.yaml`도 추가되어 있어서, Render Blueprint 방식으로 연결해도 동일하게 배포할 수 있습니다.
+
+### 참고
+
+- 현재 추천 데이터셋(`Sample.zip`, `sample_data`)이 없으면 API는 mock 데이터 기반으로 동작할 수 있습니다.
+- 실제 추천 이미지까지 함께 배포하려면 데이터셋 파일을 `backend/` 아래에 포함하거나, 외부 스토리지 경로를 연결해야 합니다.

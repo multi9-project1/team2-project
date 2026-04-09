@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: mapssiti
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeployTrigger: commit
