@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import shutil
 import time
 import urllib.parse
 import random
@@ -46,17 +48,91 @@ RECOMMENDATION_STYLE_TO_ZIGZAG_STYLE = {
     "캐주얼": "캐주얼", "매니시": "매니시", "스트리트": "스트리트", "스포티": "스포티", "힙스터/펑크": "힙스터/펑크", "레트로": "레트로/빈티지"
 }
 
+
+def _resolve_chrome_binary() -> str | None:
+    env_candidates = [
+        os.getenv("CHROME_BIN"),
+        os.getenv("GOOGLE_CHROME_BIN"),
+    ]
+    for candidate in env_candidates:
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate.strip()
+
+    executable_candidates = [
+        "google-chrome",
+        "google-chrome-stable",
+        "chromium",
+        "chromium-browser",
+        "chrome",
+    ]
+    for executable_name in executable_candidates:
+        resolved = shutil.which(executable_name)
+        if resolved:
+            return resolved
+
+    return None
+
+
+def _create_undetected_chrome_driver(version_main: int = 146):
+    options = uc.ChromeOptions()
+    options.add_argument("--headless=new")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+
+    chrome_binary = _resolve_chrome_binary()
+    attempts = []
+
+    if chrome_binary:
+        options.binary_location = str(chrome_binary)
+        attempts.append(
+            {
+                "options": options,
+                "browser_executable_path": str(chrome_binary),
+                "version_main": version_main,
+                "use_subprocess": True,
+            }
+        )
+        attempts.append(
+            {
+                "options": options,
+                "browser_executable_path": str(chrome_binary),
+                "use_subprocess": True,
+            }
+        )
+
+    attempts.append(
+        {
+            "options": options,
+            "version_main": version_main,
+            "use_subprocess": True,
+        }
+    )
+    attempts.append(
+        {
+            "options": options,
+            "use_subprocess": True,
+        }
+    )
+
+    last_error = None
+    for driver_kwargs in attempts:
+        try:
+            return uc.Chrome(**driver_kwargs)
+        except Exception as exc:
+            last_error = exc
+
+    if last_error:
+        raise last_error
+    raise RuntimeError("failed to initialize Chrome driver")
+
 def crawl_zigzag_store(url, keyword, top_n=3, max_attempts=2):
     for attempt_index in range(1, max_attempts + 1):
         driver = None
         scraped_data = []
         try:
-            options = uc.ChromeOptions()
-            options.add_argument("--headless")
-            options.add_argument("--no-sandbox")
-            options.add_argument("--disable-dev-shm-usage")
-            options.add_argument("--window-size=1920,1080")
-            driver = uc.Chrome(options=options, version_main=146)
+            driver = _create_undetected_chrome_driver(version_main=146)
             driver.get(url)
             time.sleep(12)
             
@@ -127,7 +203,7 @@ def crawl_zigzag_store(url, keyword, top_n=3, max_attempts=2):
                 return scraped_data
                 
         except Exception as e:
-            print(f"    🚨 지그재그 시도 {attempt_index} 실패: {e}")
+            print(f"    🚨 지그재그 시도 {attempt_index} 실패: {type(e).__name__}: {e}")
         finally:
             if driver: driver.quit()
     return []
