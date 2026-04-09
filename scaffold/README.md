@@ -1,5 +1,28 @@
 # 맵시TI : Fashion Recommendation Service
 
+<p>
+  <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" />
+  <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" />
+  <img src="https://img.shields.io/badge/Vanilla_JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" />
+  <img src="https://img.shields.io/badge/Python_3-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
+  <img src="https://img.shields.io/badge/Pydantic-E92063?style=for-the-badge&logo=pydantic&logoColor=white" />
+  <img src="https://img.shields.io/badge/Uvicorn-4051B5?style=for-the-badge&logo=uvicorn&logoColor=white" />
+  <img src="https://img.shields.io/badge/K--Means_Clustering-4B8BBE?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Cosine_Similarity-6A5ACD?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Hugging_Face_CLIP-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black" />
+  <img src="https://img.shields.io/badge/Multimodal_Embedding-0A66C2?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/requests-20232A?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/BeautifulSoup4-43B02A?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Selenium-43B02A?style=for-the-badge&logo=selenium&logoColor=white" />
+  <img src="https://img.shields.io/badge/undetected--chromedriver-FF6F00?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/BentoML-000000?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/CLIP_Inference_Server-7B61FF?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
+  <img src="https://img.shields.io/badge/Docker_Compose-1D63ED?style=for-the-badge&logo=docker&logoColor=white" />
+</p>
+
+
 사용자의 설문 응답을 바탕으로 개인의 취향과 스타일 성향을 분석하고, 이에 맞는 패션 아이템을 추천하는 웹 서비스입니다.  
 프론트엔드에서 수집한 설문 데이터를 FastAPI 백엔드로 전달하면, 백엔드에서 점수화 및 사용자 유형 분류를 수행한 뒤 추천 알고리즘을 통해 크롤링된 쇼핑몰 상품 중 가장 적합한 아이템을 반환합니다.
 
@@ -313,17 +336,17 @@ docker compose up --build
 ### 9.1 결과 화면 - 분석 요약 카드
 사용자의 스타일 분석 결과를 시대감성, 대표 스타일, 성별, 퍼스널컬러, 핏 정보와 함께 요약해 주는 UI입니다.
 
-[스크린샷 삽입예정]
+<img width="596" height="851" alt="스크린샷 2026-04-09 131327" src="https://github.com/user-attachments/assets/72dad37a-ab8f-4053-9347-806898097dcd" />
 
 ### 9.2 결과 화면 - 스타일 설명 / 스타일 팁 / 포인트 컬러
 추천 결과를 단순 상품 카드로 끝내지 않고, 스타일 설명과 코디 팁까지 함께 제공해 사용자가 결과를 더 잘 이해할 수 있도록 구성했습니다.
 
-[스크린샷 삽입예정]
+<img width="567" height="729" alt="스크린샷 2026-04-09 131335" src="https://github.com/user-attachments/assets/9964ddc9-9cd3-4d0b-9f99-40f8a3a64cb2" />
 
 ### 9.3 CLIP 연동 기반 실시간 상품 분석 로그
 크롤러가 수집한 상품 후보를 대상으로 CLIP 추론 서버가 병렬 유사도 분석을 수행하는 과정입니다.
 
-[스크린샷 삽입예정]
+<img width="742" height="235" alt="image" src="https://github.com/user-attachments/assets/35293756-e1fb-471c-9d43-2a3e6ea998e8" />
 
 ---
 
