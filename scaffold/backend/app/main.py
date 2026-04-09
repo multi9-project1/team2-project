@@ -31,7 +31,7 @@ except ImportError:
         find_highest_similarity_item_match,
         rank_recommendation_candidates,
     )
-    from survey_parser import collect_style_search_keywords, create_survey_profile
+    from app.logic.survey_parser import collect_style_search_keywords, create_survey_profile
 
 app = FastAPI(title="Fashion Recommendation API", version="0.1.0")
 
@@ -757,13 +757,23 @@ def get_recommendation_summary_text(request: RecommendationQueryRequest) -> Dict
     }
 
 
+
+import json
+import traceback
+
 @app.post("/crawl/musinsa")
 def crawl_musinsa_products(request: CrawlQueryRequest) -> Dict[str, Any]:
+    import json
+    import traceback
+
+    request_payload = request.model_dump()
+    print("\n" + "=" * 80)
+    print("[/crawl/musinsa] REQUEST PAYLOAD")
+    print(json.dumps(request_payload, ensure_ascii=False, indent=2))
+    print("=" * 80)
+
     try:
-        try:
-            from app.crawlers.musinsa_crl import recommend_outfit_from_survey
-        except ImportError:
-            from crawler.musinsa_crl import recommend_outfit_from_survey
+        from app.crawlers.musinsa_crl import recommend_outfit_from_survey
 
         crawl_result = recommend_outfit_from_survey(
             request.survey.model_dump(),
@@ -773,14 +783,37 @@ def crawl_musinsa_products(request: CrawlQueryRequest) -> Dict[str, Any]:
             allow_mock=request.allow_mock_data,
             top_n=request.top_n,
         )
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"unexpected error: {exc}") from exc
 
-    return crawl_result
+        print("\n" + "-" * 80)
+        print("[/crawl/musinsa] RESULT SUMMARY")
+        print(f"platform: {crawl_result.get('platform')}")
+        print(f"category: {crawl_result.get('category')}")
+        print(f"selected_color: {crawl_result.get('selected_color')}")
+        print(f"search_keyword: {crawl_result.get('search_keyword')}")
+        print(f"url: {crawl_result.get('url')}")
+        print(f"items_count: {len(crawl_result.get('items', []))}")
+        print("-" * 80)
+
+        return crawl_result
+
+    except FileNotFoundError as exc:
+        traceback.print_exc()
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    except ValueError as exc:
+        traceback.print_exc()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    except Exception as exc:
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error_type": type(exc).__name__,
+                "message": str(exc),
+                "request_payload": request_payload,
+            },
+        ) from exc
 
 
 @app.post("/crawl/zigzag")

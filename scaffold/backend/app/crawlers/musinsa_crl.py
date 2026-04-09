@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import time
 import traceback
 import urllib.parse
@@ -14,6 +12,7 @@ except ImportError:
         from .recommendation_search_profile import build_recommendation_search_profile
     except ImportError:
         from recommendation_search_profile import build_recommendation_search_profile
+
 
 # ============================================================
 # 1. 카테고리 & 스타일 코드 정의 (무신사 기준)
@@ -40,7 +39,8 @@ CATEGORIES = {
         "레깅스":                "003005",
     },
     "원피스&스커트": {
-        "전체(원피스&스커트)":   "100",
+        "원피스":   "100",
+        "스커트":   "100",
         "미디원피스":            "100002",
         "맥시원피스":            "100003",
         "미니원피스":            "100001",
@@ -48,15 +48,6 @@ CATEGORIES = {
         "미니스커트":            "100004",
         "롱스커트":              "100006",
     }
-}
-
-TOP_LEVEL_CATEGORY_CODE_MAP = {
-    "상의": "001",
-    "아우터": "002",
-    "팬츠": "003",
-    "바지": "003",
-    "니트/카디건": "001006",
-    "트레이닝": "003004",
 }
 
 MUSINSA_STYLE_ID_MAP = {
@@ -212,6 +203,15 @@ PERSONAL_COLOR_DISPLAY_TO_LEGACY_KEY = {
     "겨울 쿨": "겨울쿨",
 }
 
+TOP_LEVEL_CATEGORY_CODE_MAP = {
+    "상의": "001",
+    "아우터": "002",
+    "팬츠": "003",
+    "바지": "003",
+    "니트/카디건": "001006",
+    "트레이닝": "003004",
+}
+
 # ============================================================
 # 3. 데이터 조립 및 크롤링 핵심 함수
 # ============================================================
@@ -249,7 +249,6 @@ def build_profile(mapsiti: str, personal_color: str, gender: str) -> dict:
         "gender": gender,
     }
 
-
 def build_recommendation_aligned_profile(
     survey_answers: dict,
     *,
@@ -262,15 +261,86 @@ def build_recommendation_aligned_profile(
         allow_mock=allow_mock,
     )
     deeplink_context = search_profile["deeplink_context"]
-    legacy_style_name = _resolve_legacy_musinsa_style_name(deeplink_context["primary_style_display"])
-    legacy_personal_color_key = _resolve_legacy_personal_color_key(deeplink_context["personal_color_display"])
+
+    legacy_style_name = _resolve_legacy_musinsa_style_name(
+        deeplink_context["primary_style_display"]
+    )
+    legacy_personal_color_key = _resolve_legacy_personal_color_key(
+        deeplink_context["personal_color_display"]
+    )
     legacy_gender_code = "F" if deeplink_context["gender"] == "W" else "M"
-    legacy_profile = build_profile(legacy_style_name, legacy_personal_color_key, legacy_gender_code)
+
+    legacy_profile = build_profile(
+        legacy_style_name,
+        legacy_personal_color_key,
+        legacy_gender_code,
+    )
     legacy_profile["deeplink_context"] = deeplink_context
     legacy_profile["recommendation_primary_style_display"] = deeplink_context["primary_style_display"]
     legacy_profile["recommendation_secondary_style_codes"] = deeplink_context["secondary_style_codes"]
     legacy_profile["recommendation_tpo_keyword"] = deeplink_context["tpo_keyword"]
     return legacy_profile
+
+
+def resolve_musinsa_category_code(category_name: str) -> str | None:
+    if category_name in TOP_LEVEL_CATEGORY_CODE_MAP:
+        return TOP_LEVEL_CATEGORY_CODE_MAP[category_name]
+
+    for grouped_categories in CATEGORIES.values():
+        if category_name in grouped_categories:
+            return grouped_categories[category_name]
+
+    return None
+
+
+def should_apply_musinsa_color_filter(category_name: str) -> bool:
+    return category_name not in {
+        "팬츠",
+        "바지",
+        "데님 팬츠",
+        "슈트 팬츠&슬랙스",
+        "코튼 팬츠",
+        "숏 팬츠",
+        "트레이닝&조거 팬츠",
+    }
+
+
+def _resolve_selected_color_keywords(
+    available_color_keywords: list[str],
+    selected_color: str | None,
+    *,
+    allow_color_filter: bool,
+) -> list[str]:
+    if not allow_color_filter:
+        return []
+    if not available_color_keywords:
+        return []
+    if not selected_color:
+        return [available_color_keywords[0]]
+
+    normalized_selected_color = _normalize_filter_keyword(selected_color)
+    for available_color_keyword in available_color_keywords:
+        if _normalize_filter_keyword(available_color_keyword) == normalized_selected_color:
+            return [available_color_keyword]
+    return [available_color_keywords[0]]
+
+
+def _normalize_filter_keyword(raw_keyword: str) -> str:
+    return str(raw_keyword or "").strip().lower().replace(" ", "")
+
+
+def _resolve_legacy_musinsa_style_name(recommendation_style_display: str) -> str:
+    return RECOMMENDATION_STYLE_TO_LEGACY_STYLE.get(
+        recommendation_style_display,
+        recommendation_style_display,
+    )
+
+
+def _resolve_legacy_personal_color_key(personal_color_display: str) -> str:
+    resolved_key = PERSONAL_COLOR_DISPLAY_TO_LEGACY_KEY.get(personal_color_display)
+    if not resolved_key:
+        raise ValueError(f"무신사 퍼스널컬러 매핑이 없습니다: {personal_color_display}")
+    return resolved_key
 
 
 def build_category_url(
@@ -294,21 +364,18 @@ def build_category_url(
     url += "&sortCode=SALE_ONE_WEEK_COUNT"
     return url
 
+import tempfile
 
-def resolve_musinsa_category_code(category_name: str) -> str | None:
-    if category_name in TOP_LEVEL_CATEGORY_CODE_MAP:
-        return TOP_LEVEL_CATEGORY_CODE_MAP[category_name]
-
-    for grouped_categories in CATEGORIES.values():
-        if category_name in grouped_categories:
-            return grouped_categories[category_name]
-
-    return None
-
-
-def should_apply_musinsa_color_filter(category_name: str) -> bool:
-    return category_name not in {"팬츠", "바지", "데님 팬츠", "슈트 팬츠&슬랙스", "코튼 팬츠", "숏 팬츠", "트레이닝&조거 팬츠"}
-
+def create_driver(chrome_version: int = 146):
+    options = uc.ChromeOptions()
+    options.add_argument("--headless=new")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--window-size=1440,1200")
+    options.add_argument("--disable-popup-blocking")
+    options.add_argument(f"--user-data-dir={tempfile.mkdtemp(prefix='uc_profile_')}")
+    return uc.Chrome(options=options, version_main=chrome_version)
 
 def crawl_musinsa(
     url: str,
@@ -328,12 +395,10 @@ def crawl_musinsa(
         scraped_items: list[dict] = []
 
         try:
-            options = uc.ChromeOptions()
-            options.add_argument("--headless")
-            driver = uc.Chrome(options=options, version_main=chrome_version)
-
+            driver = create_driver(chrome_version)
             driver.get(url)
             time.sleep(5)
+
             current_url = driver.current_url
             print(f"    📍 실제 접속 URL: {current_url}")
 
@@ -399,18 +464,21 @@ def crawl_musinsa(
             if attempt_index < max_attempts:
                 print("    ⏳ 브라우저를 새로 열어 한 번 더 시도합니다.")
                 time.sleep(2)
+
         finally:
             if driver is not None:
                 try:
                     driver.quit()
+                except OSError:
+                    pass
                 except Exception:
                     pass
+                driver = None
 
     print(f"    ❌ [{category_name}] 모든 재시도 실패")
     if last_exception is not None:
         print(f"    📌 최종 실패 원인: {type(last_exception).__name__}: {last_exception}")
     return []
-
 
 # ============================================================
 # 4. 메인 실행 컨트롤러
@@ -442,12 +510,11 @@ def recommend_outfit(mapsiti: str, personal_color: str, gender: str, target_cate
             print(f"  ⚠️ '{cat_name}' 카테고리를 찾을 수 없어 건너뜁니다.")
             continue
 
-        category_colors = colors_to_use if should_apply_musinsa_color_filter(cat_name) else []
         # 추출된 핏 코드를 build_category_url에 전달
         url = build_category_url(
             category_code=cat_code,
             gender=gender,
-            colors=category_colors,
+            colors=colors_to_use,
             styles=profile["style_codes"],
             fit_codes=profile["fit_codes"]
         )
@@ -483,6 +550,16 @@ def recommend_outfit_from_survey(
     allow_mock: bool = True,
     top_n: int = 5,
 ) -> dict:
+    print("\n" + "=" * 80)
+    print("[recommend_outfit_from_survey] INPUT")
+    print("survey_answers =", survey_answers)
+    print("category_name =", category_name)
+    print("selected_color =", selected_color)
+    print("dataset_dir =", dataset_dir)
+    print("allow_mock =", allow_mock)
+    print("top_n =", top_n)
+    print("=" * 80)
+
     recommendation_profile = build_recommendation_aligned_profile(
         survey_answers,
         dataset_dir=dataset_dir,
@@ -491,6 +568,7 @@ def recommend_outfit_from_survey(
     deeplink_context = recommendation_profile["deeplink_context"]
     gender_text = "남성" if recommendation_profile["gender"] == "M" else "여성"
     available_color_keywords = recommendation_profile["recommended_colors"]
+
     applied_color_keywords = _resolve_selected_color_keywords(
         available_color_keywords,
         selected_color,
@@ -525,6 +603,8 @@ def recommend_outfit_from_survey(
         styles=recommendation_profile["style_codes"],
         fit_codes=recommendation_profile["fit_codes"],
     )
+    print("[recommend_outfit_from_survey] category_url =", category_url)
+
     scraped_items = crawl_musinsa(category_url, category_name, top_n=top_n)
 
     return {
@@ -543,41 +623,6 @@ def recommend_outfit_from_survey(
         },
         "items": scraped_items,
     }
-
-
-def _resolve_selected_color_keywords(
-    available_color_keywords: list[str],
-    selected_color: str | None,
-    *,
-    allow_color_filter: bool,
-) -> list[str]:
-    if not allow_color_filter:
-        return []
-    if not available_color_keywords:
-        return []
-    if not selected_color:
-        return [available_color_keywords[0]]
-
-    normalized_selected_color = _normalize_filter_keyword(selected_color)
-    for available_color_keyword in available_color_keywords:
-        if _normalize_filter_keyword(available_color_keyword) == normalized_selected_color:
-            return [available_color_keyword]
-    return [available_color_keywords[0]]
-
-
-def _normalize_filter_keyword(raw_keyword: str) -> str:
-    return str(raw_keyword or "").strip().lower().replace(" ", "")
-
-
-def _resolve_legacy_musinsa_style_name(recommendation_style_display: str) -> str:
-    return RECOMMENDATION_STYLE_TO_LEGACY_STYLE.get(recommendation_style_display, recommendation_style_display)
-
-
-def _resolve_legacy_personal_color_key(personal_color_display: str) -> str:
-    resolved_key = PERSONAL_COLOR_DISPLAY_TO_LEGACY_KEY.get(personal_color_display)
-    if not resolved_key:
-        raise ValueError(f"무신사 퍼스널컬러 매핑이 없습니다: {personal_color_display}")
-    return resolved_key
 
 
 if __name__ == "__main__":
