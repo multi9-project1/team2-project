@@ -64,32 +64,38 @@
   }
 
   function extractResultType(data) {
-    return (data && (data.primary_style || data.resultType)) || null;
+    if (!data) return null;
+    return data.primary_style || (data.user_profile && data.user_profile.primary_style) || (data.analysis_summary && data.analysis_summary.style) || data.resultType || null;
   }
 
   // 4. 상품 데이터 규격화
   function normalizeProductItem(item, fallbackMall) {
     const source = item || {};
+    const reasons = Array.isArray(source.reasons) ? source.reasons : [];
+    const derivedName = source.name || source.title || source.product_name || (source.era ? String(source.era) + '년대 ' + (source.style || '추천') + ' 룩' : '추천 상품');
     return {
-      brand: source.brand || source.mall_name || source.shop_name || fallbackMall || '추천 상품',
-      name: source.name || source.title || source.product_name || '이름 없는 상품',
-      price: source.price || source.sale_price || '가격 정보 없음',
-      imageUrl: source.imageUrl || source.image_url || source.img_url || source.image || '',
+      brand: source.brand || source.mall_name || source.shop_name || source.style || fallbackMall || '추천 상품',
+      name: derivedName,
+      price: source.price || source.sale_price || '',
+      imageUrl: source.imageUrl || source.image_url || source.image_full_url || source.img_url || source.image || '',
       productUrl: source.productUrl || source.product_url || source.url || source.link || '',
+      reason: source.reason || reasons[0] || '',
       mall: source.mall || source.platform || fallbackMall || ''
     };
   }
 
   function normalizeRecommendationResponse(response) {
     const data = response || {};
-    const musinsaItems = (data.musinsa || data.items || []).map(item => normalizeProductItem(item, '무신사'));
+    const datasetItems = data.recommendation_results || data.recommendations || [];
+    const musinsaItems = (data.musinsa || data.items || datasetItems).map(item => normalizeProductItem(item, '무신사'));
     const zigzagItems = (data.zigzag || []).map(item => normalizeProductItem(item, '지그재그'));
     return {
       musinsa: musinsaItems,
       zigzag: zigzagItems,
       all: musinsaItems.concat(zigzagItems),
       url: data.url || '',
-      resultType: extractResultType(data)
+      resultType: extractResultType(data),
+      summary: data.analysis_summary || null
     };
   }
 

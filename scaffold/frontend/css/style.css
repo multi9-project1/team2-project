@@ -126,3 +126,49 @@ select:focus { outline: none; }
   background-position: 0 0, 14px 14px;
   opacity: 0.5;
 }
+
+.analysis-summary-card {
+  background: #fff;
+  border: 3px solid #1E1B3A;
+  border-radius: 24px;
+  box-shadow: 6px 6px 0 #1E1B3A;
+  padding: 20px 18px;
+  margin-bottom: 16px;
+}
+
+.analysis-summary-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1E1B3A;
+  margin-bottom: 8px;
+}
+
+.analysis-summary-text {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #6F6791;
+  margin-bottom: 14px;
+}
+
+.analysis-summary-text strong {
+  color: #1E1B3A;
+}
+
+.analysis-summary-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.analysis-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  background: #fff;
+  border: 2px solid #1E1B3A;
+  border-radius: 999px;
+  font-size: 14px;
+  color: #1E1B3A;
+  box-shadow: 2px 2px 0 #1E1B3A;
+}

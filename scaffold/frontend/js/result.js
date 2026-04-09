@@ -90,6 +90,47 @@
     if (app) app.insertBefore(container, app.firstChild.nextSibling);
   }
 
+  function buildFallbackAnalysisSummary() {
+    const analysis = (state.recommendationResponse && state.recommendationResponse.preference_analysis) || {};
+    const profile = (state.recommendationResponse && state.recommendationResponse.user_profile) || (state.profileResponse && state.profileResponse.user_profile) || {};
+    const genderMap = { M: '남성', W: '여성', U: '공용' };
+    const fitMap = { T: ['노멀 핏', '타이트 핏'], L: ['루즈 핏', '노멀 핏'] };
+    const eraLabel = analysis.era_label || (analysis.era ? String(analysis.era) + '년대' : '취향 분석 기준');
+    const styleLabel = analysis.style || state.resultType || '캐주얼';
+    const similarity = analysis.similarity_percent || 0;
+    const fitLabels = fitMap[profile.fit_preference] || ['노멀 핏'];
+    return {
+      title: '분석 요약',
+      description: '알고리즘 분석 결과, 당신의 취향은 [' + eraLabel + ' | ' + styleLabel + ']와 ' + similarity + '% 일치합니다.',
+      chips: [
+        { key: 'gender', label: '성별', value: genderMap[state.gender || profile.gender] || '공용' },
+        { key: 'personal_color', label: '퍼스널컬러', value: state.personalColor || profile.personal_color_display || '모르겠음' },
+        { key: 'fit', label: '핏', value: fitLabels.join(' / ') }
+      ]
+    };
+  }
+
+  function renderAnalysisSummary() {
+    const card = utils.$('#analysis-summary-card');
+    const titleEl = utils.$('#analysis-summary-title');
+    const textEl = utils.$('#analysis-summary-text');
+    const tagsEl = utils.$('#analysis-summary-tags');
+    if (!card || !titleEl || !textEl || !tagsEl) return;
+
+    const summary = (state.recommendationResponse && state.recommendationResponse.analysis_summary) || buildFallbackAnalysisSummary();
+    if (!summary) return;
+
+    titleEl.textContent = summary.title || '분석 요약';
+    textEl.innerHTML = utils.escapeHtml(summary.description || '').replace(/\[(.*?)\]/g, '<strong>[$1]</strong>').replace(/(\d+%)/g, '<strong>$1</strong>');
+
+    const chips = Array.isArray(summary.chips) ? summary.chips : [];
+    tagsEl.innerHTML = chips.map(function (chip) {
+      return '<span class="analysis-chip">' + utils.escapeHtml(chip.label || '') + ': ' + utils.escapeHtml(chip.value || '') + '</span>';
+    }).join('');
+
+    card.style.display = 'block';
+  }
+
   function renderResult() {
     const persona = getPersona();
     const isFemale = state.gender === 'W';
@@ -304,16 +345,12 @@
 
     renderStatusMessage();
     renderResult();
+    renderAnalysisSummary();
 
-    if (state.recommendationResponse) {
-      const normalized = api.normalizeRecommendationResponse(state.recommendationResponse);
-      renderProductsFromResponse(normalized, {
-        gender: state.gender,
-        category: state.selectedCat,
-        fit: (utils.$('#fit-select') && utils.$('#fit-select').value) || '레귤러핏',
-        color: (utils.$('#color-select') && utils.$('#color-select').value) || '블랙'
-      });
-    }
+    // 결과 화면 진입 시에는 상품 영역을 비워 둡니다.
+    // 사용자가 '맞춤 상품 보기' 버튼을 눌렀을 때만 실시간 상품을 렌더링합니다.
+    utils.$('#product-results').innerHTML = '';
+    utils.$('#shop-links').innerHTML = '';
 
     utils.$('#preview-btn').addEventListener('click', loadProducts);
     utils.$('#share-result-btn').addEventListener('click', shareResult);
