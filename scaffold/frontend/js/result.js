@@ -276,7 +276,7 @@
       color: (utils.$('#color-select') && utils.$('#color-select').value) || '블랙'
     };
     const button = utils.$('#preview-btn');
-    button.textContent = '⏳ 실시간 추출 중 (약 15초 소요)...';
+    button.textContent = '⏳ 무신사 상품 불러오는 중...';
     button.disabled = true;
 
     try {
@@ -292,30 +292,44 @@
         top_n: 3
       };
 
-      // 1. 무신사 실시간 크롤링 호출
       const musinsaRes = await window.MapsiApi.request('/crawl/musinsa', {
         method: 'POST',
         body: JSON.stringify(payload)
       });
 
-      // 2. 지그재그 실시간 크롤링 호출 (여성인 경우만)
-      let zigzagRes = { items: [] };
+      const musinsaOnly = {
+        musinsa: musinsaRes.items || [],
+        zigzag: [],
+        url: musinsaRes.url
+      };
+      renderProductsFromResponse(window.MapsiApi.normalizeRecommendationResponse(musinsaOnly), filters);
+
       if (state.gender === 'W') {
-        zigzagRes = await window.MapsiApi.request('/crawl/zigzag', {
+        button.textContent = '⏳ 지그재그 상품 이어서 불러오는 중...';
+        utils.$('#product-results').insertAdjacentHTML(
+          'beforeend',
+          '<div id="zigzag-loading" style="padding:14px 16px;margin-top:16px;background:#FFF8E8;border:2px solid #1E1B3A;border-radius:12px;box-shadow:3px 3px 0 #1E1B3A;font-size:14px;color:#7C6F9A;font-family:\'Noto Sans KR\',sans-serif;">지그재그 추천 상품을 이어서 불러오는 중이에요...</div>'
+        );
+
+        const zigzagRes = await window.MapsiApi.request('/crawl/zigzag', {
           method: 'POST',
           body: JSON.stringify(payload)
         }).catch(() => ({ items: [] }));
+
+        const loadingMessage = utils.$('#zigzag-loading');
+        if (loadingMessage) {
+          loadingMessage.remove();
+        }
+
+        const combined = {
+          musinsa: musinsaRes.items || [],
+          zigzag: zigzagRes.items || [],
+          url: musinsaRes.url
+        };
+
+        renderProductsFromResponse(window.MapsiApi.normalizeRecommendationResponse(combined), filters);
       }
 
-      const combined = {
-        musinsa: musinsaRes.items || [],
-        zigzag: zigzagRes.items || [],
-        url: musinsaRes.url
-      };
-
-      const normalized = window.MapsiApi.normalizeRecommendationResponse(combined);
-      renderProductsFromResponse(normalized, filters);
-      
     } catch (error) {
       console.error('Crawler Error:', error);
       utils.showAlert('크롤링 실패: ' + error.message);
