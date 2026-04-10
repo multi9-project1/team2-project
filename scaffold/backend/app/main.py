@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, Request, Response
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -56,6 +56,10 @@ DEFAULT_DATASET_CSV_CANDIDATES = [
 DEFAULT_SAMPLE_ZIP = PROJECT_ROOT / "Sample.zip"
 LEGACY_SAMPLE_DATASET_DIR = PROJECT_ROOT / "sample_data"
 app.mount("/sample-files", StaticFiles(directory=str(LEGACY_SAMPLE_DATASET_DIR), check_dir=False), name="sample-files")
+FRONTEND_DIR = (PROJECT_ROOT.parent.parent / "frontend").resolve()
+INDEX_HTML_PATH = FRONTEND_DIR / "index.html"
+SURVEY_HTML_PATH = FRONTEND_DIR / "survey.html"
+RESULT_HTML_PATH = FRONTEND_DIR / "result.html"
 
 class SurveyInputModel(BaseModel):
     model_config = ConfigDict(extra='allow') # 정해지지 않은 필드도 모두 허용
@@ -198,6 +202,21 @@ def generate_dataset_recommendation_response(request: RecommendationQueryRequest
 @app.get("/health")
 def get_health_status() -> Dict[str, str]: return {"status": "ok"}
 
+
+@app.get("/", include_in_schema=False)
+def serve_index_page() -> FileResponse:
+    return FileResponse(INDEX_HTML_PATH)
+
+
+@app.get("/survey", include_in_schema=False)
+def serve_survey_page() -> FileResponse:
+    return FileResponse(SURVEY_HTML_PATH)
+
+
+@app.get("/result", include_in_schema=False)
+def serve_result_page() -> FileResponse:
+    return FileResponse(RESULT_HTML_PATH)
+
 @app.post("/profile")
 def analyze_profile(request: ProfileAnalysisRequest) -> Dict[str, Any]:
     try:
@@ -256,7 +275,6 @@ def crawl_zigzag_products(request: CrawlQueryRequest) -> Dict[str, Any]:
     return crawl_result
 
 # 프론트엔드 정적 파일 서빙
-FRONTEND_DIR = (PROJECT_ROOT.parent.parent / "frontend").resolve()
 if FRONTEND_DIR.exists():
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
 else:

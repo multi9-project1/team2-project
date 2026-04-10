@@ -175,7 +175,7 @@
       utils.showAlert('퍼스널컬러를 선택해주세요!');
       return;
     }
-    utils.navigate('survey.html');
+    utils.navigate('/survey');
   }
 
   function startDiag() {
@@ -251,7 +251,7 @@
     state.personalColor = colorKey;
     persistState();
     utils.showAlert('진단 완료! 당신은 ' + colorKey + ' 타입이에요 🎨');
-    utils.navigate('survey.html');
+    utils.navigate('/survey');
   }
 
   function renderSurvey() {
@@ -290,7 +290,7 @@
 
   function surveyPrev() {
     if (state.currentQ === 0) {
-      utils.navigate('index.html');
+      utils.navigate('/');
       return;
     }
     state.currentQ -= 1;
@@ -392,7 +392,7 @@
       recommendationResponse: recommendationResponse
     });
 
-    utils.navigate('result.html');
+    utils.navigate('/result');
   }
 
   function startLoading() {
@@ -426,7 +426,7 @@
           profileResponse: null,
           recommendationResponse: null
         });
-        utils.navigate('result.html');
+        utils.navigate('/result');
       })
       .finally(function () {
         window.clearInterval(interval);
@@ -457,7 +457,7 @@
   function initSurveyPage() {
     loadStoredState();
     if (!state.gender) {
-      utils.navigate('index.html');
+      utils.navigate('/');
       return;
     }
 

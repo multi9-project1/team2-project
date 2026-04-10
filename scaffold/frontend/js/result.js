@@ -347,13 +347,13 @@
 
   function resetAll() {
     utils.clearAppState();
-    utils.navigate('index.html');
+    utils.navigate('/');
   }
 
   function initResultPage() {
     loadState();
     if (!state.gender || !state.resultType) {
-      utils.navigate('index.html');
+      utils.navigate('/');
       return;
     }
 
@@ -361,9 +361,11 @@
     renderResult();
     renderAnalysisSummary();
 
-    // 결과 화면 진입 시에는 상품 영역을 비워 둡니다.
-    // 사용자가 '맞춤 상품 보기' 버튼을 눌렀을 때만 실시간 상품을 렌더링합니다.
-    utils.$('#product-results').innerHTML = '';
+    // 결과 페이지는 즉시 열고, 실시간 상품 크롤링은 버튼 클릭 시에만 시작합니다.
+    utils.$('#product-results').innerHTML =
+      '<div style="padding:16px;background:#FFF8E8;border:2px solid #1E1B3A;border-radius:12px;box-shadow:3px 3px 0 #1E1B3A;font-size:14px;color:#7C6F9A;font-family:\'Noto Sans KR\',sans-serif;line-height:1.7;">' +
+      '추천 결과는 준비됐어요. 아래 <strong>맞춤 상품 보기</strong> 버튼을 누르면 실시간으로 상품을 불러옵니다.' +
+      '</div>';
     utils.$('#shop-links').innerHTML = '';
 
     utils.$('#preview-btn').addEventListener('click', loadProducts);
