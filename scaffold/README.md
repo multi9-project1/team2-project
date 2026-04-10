@@ -1,26 +1,21 @@
 # 맵시TI : Fashion Recommendation Service
 
-<p>
-  <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" />
-  <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" />
-  <img src="https://img.shields.io/badge/Vanilla_JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" />
-  <img src="https://img.shields.io/badge/Python_3-3776AB?style=for-the-badge&logo=python&logoColor=white" />
-  <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
-  <img src="https://img.shields.io/badge/Pydantic-E92063?style=for-the-badge&logo=pydantic&logoColor=white" />
-  <img src="https://img.shields.io/badge/Uvicorn-4051B5?style=for-the-badge&logo=uvicorn&logoColor=white" />
-  <img src="https://img.shields.io/badge/K--Means_Clustering-4B8BBE?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Cosine_Similarity-6A5ACD?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Hugging_Face_CLIP-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black" />
-  <img src="https://img.shields.io/badge/Multimodal_Embedding-0A66C2?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/requests-20232A?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/BeautifulSoup4-43B02A?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Selenium-43B02A?style=for-the-badge&logo=selenium&logoColor=white" />
-  <img src="https://img.shields.io/badge/undetected--chromedriver-FF6F00?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/BentoML-000000?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/CLIP_Inference_Server-7B61FF?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
-  <img src="https://img.shields.io/badge/Docker_Compose-1D63ED?style=for-the-badge&logo=docker&logoColor=white" />
-</p>
+[![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
+[![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-05998B?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Pydantic](https://img.shields.io/badge/Pydantic-v2-E92063?logo=pydantic&logoColor=white)](https://docs.pydantic.dev/)
+[![Uvicorn](https://img.shields.io/badge/Uvicorn-0.23+-494A4F?logo=uvicorn&logoColor=white)](https://www.uvicorn.org/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?logo=scikitlearn&logoColor=white)](https://scikit-learn.org/)
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-CLIP-FFD21E)](https://huggingface.co/docs/transformers/model_doc/clip)
+[![BentoML](https://img.shields.io/badge/BentoML-FF4C11?logo=bentoml&logoColor=white)](https://www.bentoml.com/)
+[![Vector Similarity](https://img.shields.io/badge/Cosine--Similarity-Logic-blue)](#)
+[![Selenium](https://img.shields.io/badge/Selenium-43B02A?logo=selenium&logoColor=white)](https://www.selenium.dev/)
+[![BeautifulSoup4](https://img.shields.io/badge/BeautifulSoup4-4.12+-black)](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)
+[![Requests](https://img.shields.io/badge/Requests-2.31+-0052CC)](https://requests.readthedocs.io/)
+[![Docker](https://img.shields.io/badge/Docker-24.0+-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Docker Compose](https://img.shields.io/badge/Docker--Compose-v2-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
 
 
 사용자의 설문 응답을 바탕으로 개인의 취향과 스타일 성향을 분석하고, 이에 맞는 패션 아이템을 추천하는 웹 서비스입니다.  
@@ -332,6 +327,9 @@ docker compose up --build
 - 실제 추천 이미지까지 함께 배포하려면 데이터셋 파일을 `backend/` 아래에 포함하거나, 외부 스토리지 경로를 연결해야 합니다.
 
 ## 9. 스크린샷
+
+![mapssi 시연](https://github.com/user-attachments/assets/8e3051ea-9fe4-4ef0-82e9-a3b08a429a0a)
+
 
 ### 9.1 결과 화면 - 분석 요약 카드
 사용자의 스타일 분석 결과를 시대감성, 대표 스타일, 성별, 퍼스널컬러, 핏 정보와 함께 요약해 주는 UI입니다.
